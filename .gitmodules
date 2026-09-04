@@ -1,0 +1,3 @@
+[submodule "xyflow"]
+	path = xyflow
+	url = https://github.com/xyflow/xyflow

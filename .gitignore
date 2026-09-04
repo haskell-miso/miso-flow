@@ -1,0 +1,16 @@
+dist-newstyle/
+dist-js/
+dist-wasm/
+node_modules/
+TAGS
+tags
+*.hi
+*.o
+
+# built demo artifacts (regenerate with `make js` / `make wasm`)
+example/static/app.js
+example/static/miso-flow.js
+example/static-wasm/app.wasm
+example/static-wasm/ghc_wasm_jsffi.js
+example/static-wasm/miso-flow.js
+*~undo-tree~*

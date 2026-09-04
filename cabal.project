@@ -1,0 +1,16 @@
+packages:
+  .
+
+-- miso 1.13 with the destroy-hook DOMRef fix (dmjio/miso#1636).
+-- For local development against a checkout, override with a
+-- cabal.project.local instead.
+source-repository-package
+  type: git
+  location: https://github.com/dmjio/miso
+  tag: e672ab61db712e5402b1e8ae27433304c25b2e2a
+
+allow-newer:
+  all:base
+
+package miso
+  flags: +template-haskell

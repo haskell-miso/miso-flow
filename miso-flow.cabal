@@ -1,0 +1,90 @@
+cabal-version:       2.2
+name:                miso-flow
+version:             0.1.0.0
+category:            Web, Miso
+license:             BSD-3-Clause
+license-file:        LICENSE
+author:              David M. Johnson <code@dmj.io>
+maintainer:          David M. Johnson <code@dmj.io>
+build-type:          Simple
+synopsis:            Node-based UIs for miso, powered by xyflow
+description:
+  miso-flow brings the xyflow (React Flow / Svelte Flow) node-based UI
+  system to miso. The pure parts of @xyflow/system (edge path math,
+  viewport math, graph utilities, the store algorithms) are ported to
+  Haskell so they are usable directly in 'View' code, while the
+  imperative gesture modules (XYPanZoom, XYDrag, XYHandle, XYResizer,
+  XYMinimap) are driven through the real @xyflow/system JavaScript,
+  initialized from VDOM lifecycle hooks ('onCreatedWith').
+  .
+  The port follows @xyflow/system (MIT License, (c) 2019-2024 webkid GmbH).
+
+extra-source-files:
+  README.md
+  ts/miso-flow.ts
+  js/miso-flow.js
+
+common opts
+  default-language: Haskell2010
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns
+  default-extensions:
+    LambdaCase
+    OverloadedStrings
+    RecordWildCards
+
+library
+  import: opts
+  hs-source-dirs: src
+  exposed-modules:
+    Miso.Flow
+    Miso.Flow.Changes
+    Miso.Flow.Constants
+    Miso.Flow.Internal.Bridge
+    Miso.Flow.Style
+    Miso.Flow.Types
+    Miso.Flow.Utils
+    Miso.Flow.View
+    Miso.Flow.Utils.Connections
+    Miso.Flow.Utils.Dom
+    Miso.Flow.Utils.Edges
+    Miso.Flow.Utils.General
+    Miso.Flow.Utils.Graph
+    Miso.Flow.Utils.Marker
+    Miso.Flow.Utils.Store
+    Miso.Flow.Utils.Toolbar
+  other-modules:
+    Miso.Flow.Internal.JSNum
+  build-depends:
+      base       >= 4.12 && < 5
+    , containers < 0.9
+    , miso       >= 1.13
+
+executable miso-flow-example
+  import: opts
+  hs-source-dirs: example
+  main-is: Main.hs
+  build-depends:
+      base
+    , miso
+    , miso-flow
+  if arch(javascript)
+    ld-options:
+      -sEXPORTED_RUNTIME_METHODS=HEAP8
+  if arch(wasm32)
+    cpp-options:
+      -DWASM
+    ghc-options:
+      -no-hs-main
+      -optl-mexec-model=reactor
+      "-optl-Wl,--export=hs_start"
+
+test-suite miso-flow-golden
+  import: opts
+  type: exitcode-stdio-1.0
+  hs-source-dirs: tests
+  main-is: Golden.hs
+  build-depends:
+      base
+    , containers
+    , miso
+    , miso-flow
