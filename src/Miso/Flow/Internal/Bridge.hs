@@ -1,6 +1,10 @@
 -----------------------------------------------------------------------------
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
+#ifdef WASM
+{-# LANGUAGE TemplateHaskell   #-}
+#endif
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Miso.Flow.Internal.Bridge
@@ -71,8 +75,16 @@ import           Control.Applicative ((<|>))
 import           Control.Monad (void)
 import           Data.Maybe (fromMaybe)
 import           Prelude
+#ifdef WASM
+import           Control.Monad (unless)
+import           Data.IORef (IORef, newIORef, readIORef, atomicWriteIORef)
+import           System.IO.Unsafe (unsafePerformIO)
+#endif
 -----------------------------------------------------------------------------
 import           Miso.DSL
+#ifdef WASM
+import           Miso.DSL.TH.File (evalFile)
+#endif
 import           Miso.Effect (DOMRef)
 import           Miso.JSON
   ( FromJSON (..)
@@ -410,12 +422,22 @@ instance FromJSON ReconnectPayload where
       <$> o .: "edgeId"
       <*> o .: "connection"
 -----------------------------------------------------------------------------
+#ifdef WASM
+-- The WASM linker has no @js-sources@ support, so the bridge is spliced
+-- in as a JSFFI snippet and evaluated once, on the first store.
+bridgeLoaded :: IORef Bool
+{-# NOINLINE bridgeLoaded #-}
+bridgeLoaded = unsafePerformIO (newIORef False)
+#endif
+
 -- | Create a JavaScript store over the flow's root element. Expects the
 -- element to contain a pane (@.\<lib\>-flow__pane@) and a viewport
 -- (@.xyflow__viewport@), as rendered by 'Miso.Flow.View.flowView'.
 --
--- Requires @js\/miso-flow.js@ to be loaded (it defines
--- @globalThis.MisoFlow@).
+-- Requires @js\/miso-flow.js@ (it defines @globalThis.MisoFlow@). On
+-- the GHCJS\/JS backends the library's @js-sources@ links it into the
+-- compiled output; on WASM it is spliced in at compile time and
+-- evaluated here on first use.
 createFlowStore
   :: DOMRef
   -> StoreOptions
@@ -425,6 +447,11 @@ createFlowStore
   -> BridgeCallbacks
   -> IO FlowStore
 createFlowStore domRef options mValidate BridgeCallbacks {..} = do
+#ifdef WASM
+  loaded <- readIORef bridgeLoaded
+  unless loaded $(evalFile "js/miso-flow.js")
+  atomicWriteIORef bridgeLoaded True
+#endif
   onViewport <- jsonCallback bcViewport
   onViewportStart <- jsonCallback bcViewportStart
   onViewportEnd <- jsonCallback bcViewportEnd

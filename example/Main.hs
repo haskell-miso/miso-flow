@@ -23,8 +23,10 @@ import qualified Miso.Html.Property as P
 import           Miso.String (MisoString, ms)
 import           Miso.Types (Component (styles), View, text)
 -----------------------------------------------------------------------------
+import qualified Data.Map.Strict as M
+-----------------------------------------------------------------------------
 import           Miso.Flow
-import           Miso.Flow.Utils (pointToRendererPoint)
+import           Miso.Flow.Utils (internalNodeToRect, pointToRendererPoint)
 -----------------------------------------------------------------------------
 main :: IO ()
 main = startApp defaultEvents app
@@ -45,6 +47,8 @@ app =
       { soMinZoom = 0.2
       , soMaxZoom = 4
       , soSnapGrid = SnapGrid 20 20
+        -- panning is clamped to a generous region around the patch
+      , soTranslateExtent = Just (coordinateExtent (-2400, -1800) (3600, 2400))
       }
     settings = defaultFlowSettings
       { fsValidateConnection = Just signalRule }
@@ -91,10 +95,15 @@ initialNodes =
       , nodeParentId = Just "voice"
       , nodeExtent = Just ExtentParent
       }
+    -- draggable only by its grip, via a dragHandle selector
   , (node "delay" (xy 790 90) ("Delay", "dotted eighth"))
-      { nodeType = Just "effect" }
+      { nodeType = Just "effect", nodeDragHandle = Just ".pw-grip" }
+    -- the main out can be hidden but never deleted
   , (node "out" (xy 1060 210) ("Main out", "stereo"))
-      { nodeType = Just "output", nodeTargetPosition = Just PositionLeft }
+      { nodeType = Just "output"
+      , nodeTargetPosition = Just PositionLeft
+      , nodeDeletable = Just False
+      }
   ]
 -----------------------------------------------------------------------------
 initialEdges :: [Edge ()]
@@ -106,6 +115,8 @@ initialEdges =
       { edgeTargetHandle = Just "cv", edgeType = Just "smoothstep" }
   , (edge "c-filt-delay" "filt" "delay")
       { edgeType = Just "simplebezier"
+      , edgeMarkerStart = Just (Marker (edgeMarker MarkerArrow)
+          { markerColor = Just "#8e9bff", markerStrokeWidth = Just 1.5 })
       , edgeMarkerEnd = Just (Marker (edgeMarker MarkerArrowClosed))
       }
   , (edge "c-delay-out" "delay" "out")
@@ -147,9 +158,13 @@ moduleContent cfg n = case nodeType n of
     card =
       [ div_
           [ P.class_ "pw-module" ]
-          [ div_ [ P.class_ "pw-name" ] [ text name ]
-          , div_ [ P.class_ "pw-desc" ] [ text desc ]
-          ]
+          ( [ span_ [ P.class_ "pw-grip" ] [ "\x2059" ]
+            | nodeDragHandle n == Just ".pw-grip"
+            ]
+         <> [ div_ [ P.class_ "pw-name" ] [ text name ]
+            , div_ [ P.class_ "pw-desc" ] [ text desc ]
+            ]
+          )
       ]
 -----------------------------------------------------------------------------
 -- * Chrome
@@ -172,22 +187,33 @@ overlays cfg scene =
   , panelView TopRight
       [ div_
           [ P.class_ "pw-stack" ]
-          [ div_
-              [ P.class_ "pw-panel pw-status" ]
-              [ text (ms (length (sceneNodes scene)) <> " modules, "
-                  <> ms (length (sceneEdges scene)) <> " cables, zoom "
-                  <> ms (round (viewportZoom (sceneViewport scene) * 100) :: Int)
-                  <> "%")
-              ]
-          , button_
-              [ P.classes_ ("pw-panel" : "pw-toggle" : [ "on" | snapping ])
-              , P.type_ "button"
-              , onClick (FlowOptionsChanged opts { soSnapToGrid = not snapping })
-              ]
-              [ span_ [ P.class_ "pw-toggle-dot" ] []
-              , text (if snapping then "Snap to grid: on" else "Snap to grid: off")
-              ]
-          ]
+          ( [ div_
+                [ P.class_ "pw-panel pw-status" ]
+                [ text (ms (length (sceneNodes scene)) <> " modules, "
+                    <> ms (length (sceneEdges scene)) <> " cables, zoom "
+                    <> ms (round (viewportZoom (sceneViewport scene) * 100) :: Int)
+                    <> "%")
+                ]
+            ]
+         <> [ button_
+                [ P.class_ "pw-panel pw-toggle"
+                , P.type_ "button"
+                , onClick (FlowSetNodes
+                    [ n { nodeHidden = False } | n <- sceneNodes scene ])
+                ]
+                [ text ("Show " <> ms hiddenCount <> " hidden") ]
+            | hiddenCount > 0
+            ]
+         <> [ button_
+                [ P.classes_ ("pw-panel" : "pw-toggle" : [ "on" | snapping ])
+                , P.type_ "button"
+                , onClick (FlowOptionsChanged opts { soSnapToGrid = not snapping })
+                ]
+                [ span_ [ P.class_ "pw-toggle-dot" ] []
+                , text (if snapping then "Snap to grid: on" else "Snap to grid: off")
+                ]
+            ]
+          )
       ]
   , panelView CenterLeft
       [ div_
@@ -200,6 +226,7 @@ overlays cfg scene =
   , controlsView BottomLeft
       [ ("+", FlowZoomIn)
       , ("\x2212", FlowZoomOut)
+      , ("1:1", FlowZoomTo 1)
       , ("\x2922", FlowFitView)
       ]
   , minimapView defaultMinimapConfig cfg scene
@@ -207,16 +234,49 @@ overlays cfg scene =
   <> [ v
      | n <- sceneNodes scene
      , nodeSelected n
-     , v <- nodeToolbarView defaultToolbarConfig scene (nodeId n)
-         [ button_ [ onClick (FlowRemoveNode (nodeId n)) ] [ "delete" ] ]
+     , let buttons = toolbarButtons scene n
+     , not (null buttons)
+     , v <- nodeToolbarView defaultToolbarConfig scene (nodeId n) buttons
      ]
   where
     opts = sceneOptions scene
     snapping = soSnapToGrid opts
+    hiddenCount = length [ () | n <- sceneNodes scene, nodeHidden n ]
     -- spawn a fresh module at the viewport center; the graph is plain
     -- model data, so adding is just FlowSetNodes with one more node
     addModule kind =
       FlowSetNodes (sceneNodes scene <> [ newModule scene kind ])
+-----------------------------------------------------------------------------
+-- | Per-module toolbar actions: hide (except groups), frame the
+-- viewport on groups, delete unless the module forbids it.
+toolbarButtons :: FlowScene Module () -> Node Module -> [PatchView]
+toolbarButtons scene n =
+  [ button_
+      [ onClick (FlowFitBounds rect) ]
+      [ "frame" ]
+  | nodeType n == Just "group"
+  , Just rect <- [ internalNodeToRect
+                     <$> lookupNode (nodeId n) (sceneNodeLookup scene) ]
+  ]
+  <>
+  [ button_
+      [ onClick (FlowSetNodes
+          [ if nodeId n' == nodeId n
+              then n' { nodeHidden = True, nodeSelected = False }
+              else n'
+          | n' <- sceneNodes scene
+          ]) ]
+      [ "hide" ]
+  | nodeType n /= Just "group"
+  ]
+  <>
+  [ button_
+      [ onClick (FlowRemoveNode (nodeId n)) ]
+      [ "delete" ]
+  | nodeDeletable n /= Just False
+  ]
+  where
+    lookupNode = M.lookup
 -----------------------------------------------------------------------------
 -- | A fresh module of the given kind, placed at the viewport center
 -- (nudged by how many modules exist, so repeated adds cascade).
@@ -249,6 +309,13 @@ newModule scene kind =
 -- | A small toolbar on each selected cable to unpatch it.
 cableToolbars :: PatchConfig -> FlowScene Module () -> [PatchView]
 cableToolbars cfg scene =
+  -- a permanent tag on the control cable (edge labels are just views
+  -- at the cable's label anchor)
+  [ v
+  | v <- edgeToolbarView cfg scene "c-lfo-cv"
+      [ span_ [ P.class_ "pw-cable-tag" ] [ "control" ] ]
+  ]
+  <>
   [ v
   | e <- sceneEdges scene
   , edgeSelected e
@@ -271,6 +338,8 @@ patchworkStyles = mconcat
     ".pw-palette button { border: none; background: transparent; color: var(--mf-panel-color); font-size: 12px; text-align: left; padding: 7px 11px; border-radius: 8px; cursor: pointer; }",
     ".pw-palette button:hover { background: var(--mf-accent-soft); }",
     ".pw-palette button:focus-visible { outline: 2px solid var(--mf-accent); }",
+    ".pw-grip { position: absolute; top: 7px; right: 9px; font-size: 11px; color: #9aa3d5; cursor: grab; }",
+    ".pw-cable-tag { font-size: 10px; color: #9aa3d5; background: var(--mf-edge-label-bg); border: 1px solid var(--mf-panel-border); padding: 2px 8px; border-radius: 6px; }",
   ".pw-module {  background: var(--mf-node-bg);  border: 1px solid var(--mf-node-border);  border-left: 3px solid var(--mf-accent);  border-radius: 10px;  box-shadow: var(--mf-node-shadow);  padding: 10px 16px 11px 13px;  min-width: 150px;  width: 100%;  height: 100%;  box-sizing: border-box;  transition: box-shadow 120ms ease;}",
   ".miso-flow__node-source .pw-module { border-left-color: #ffad4d; }",
   ".miso-flow__node-effect .pw-module,.miso-flow__node-filter .pw-module { border-left-color: #8e9bff; }",

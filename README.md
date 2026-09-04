@@ -54,13 +54,10 @@ app = flowComponent defaultStoreOptions text id nodes edges
     edges = [ (edge "e1-2" "1" "2") { edgeAnimated = True } ]
 ```
 
-`js/miso-flow.js` must be loaded on the page before the app starts (it
-defines `globalThis.MisoFlow`):
-
-```html
-<script src="miso-flow.js"></script>
-<script src="app.js"></script>
-```
+`js/miso-flow.js` (it defines `globalThis.MisoFlow`) ships inside the
+compiled output — via the library's `js-sources` on the GHCJS/JS
+backends, and spliced in at compile time on WASM — so no extra
+`<script>` tag is needed.
 
 See `example/` for **Patchwork**, a modular-synth-style patch editor
 that exercises every feature: typed modules with rail colors, a
@@ -93,7 +90,6 @@ cabal build exe:miso-flow-example \
   --with-hc-pkg=javascript-unknown-ghcjs-ghc-pkg
 cp dist-newstyle/build/javascript-ghcjs/ghc-*/miso-flow-*/x/miso-flow-example/build/miso-flow-example/miso-flow-example.jsexe/all.js \
    example/static/app.js
-cp js/miso-flow.js example/static/
 # then serve example/static
 
 # WASM build (loader page in example/static-wasm)

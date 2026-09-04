@@ -17,8 +17,9 @@
 --   flowComponent defaultStoreOptions (text . nodeLabel) id myNodes myEdges
 -- @
 --
--- Requires @js\/miso-flow.js@ to be loaded on the page (it defines
--- @globalThis.MisoFlow@).
+-- Requires @js\/miso-flow.js@ (it defines @globalThis.MisoFlow@); it
+-- ships inside the compiled output (@js-sources@ on the GHCJS\/JS
+-- backends, a compile-time splice on WASM).
 ----------------------------------------------------------------------------
 module Miso.Flow
   ( -- * Component
@@ -233,6 +234,11 @@ data FlowAction n e
     -- ^ change store options at runtime (zoom limits, snapping, …)
   | FlowZoomIn
   | FlowZoomOut
+  | FlowZoomTo Double
+  | FlowSetCenterOn XYPosition
+    -- ^ center the viewport on a flow position
+  | FlowFitBounds Rect
+    -- ^ fit the viewport to a flow-coordinate rectangle
   | FlowFitView
   | FlowErrorRaised MisoString MisoString
 -----------------------------------------------------------------------------
@@ -444,11 +450,23 @@ updateFlowWith settings = \case
     modify $ \m -> m { fmSelectionRect = Nothing }
 
   FlowRemoveNode nid -> do
-    modify $ \m -> resync m
-      { fmNodes = [ n | n <- fmNodes m, nodeId n /= nid ]
-      , fmEdges =
-          [ e | e <- fmEdges m, edgeSource e /= nid, edgeTarget e /= nid ]
-      }
+    -- cascade through children (and their edges) like the delete key
+    modify $ \m ->
+      let (goneNodes, goneEdges) =
+            getElementsToRemove [ nid ] [] (fmNodes m) (fmEdges m)
+          goneNodeIds = S.fromList (map nodeId goneNodes)
+          goneEdgeIds = S.fromList (map edgeId goneEdges)
+      in resync m
+           { fmNodes =
+               [ n | n <- fmNodes m, nodeId n `S.notMember` goneNodeIds ]
+           , fmEdges =
+               [ e
+               | e <- fmEdges m
+               , edgeId e `S.notMember` goneEdgeIds
+               , edgeSource e `S.notMember` goneNodeIds
+               , edgeTarget e `S.notMember` goneNodeIds
+               ]
+           }
     pushGraph
     syncMinimap
 
@@ -465,6 +483,8 @@ updateFlowWith settings = \case
 
   FlowMinimapClicked (XYPosition x y) ->
     onStore (\s -> storeSetCenter s x y defaultSetCenterOptions)
+    -- (same as 'FlowSetCenterOn'; kept separate so embedders can treat
+    -- minimap clicks differently)
 
   FlowDeletePressed -> do
     m <- get
@@ -541,6 +561,16 @@ updateFlowWith settings = \case
   FlowZoomIn -> onStore (`storeZoomIn` defaultViewportHelperOptions)
 
   FlowZoomOut -> onStore (`storeZoomOut` defaultViewportHelperOptions)
+
+  FlowZoomTo zoom ->
+    onStore (\s -> storeZoomTo s zoom defaultViewportHelperOptions)
+
+  FlowSetCenterOn (XYPosition x y) ->
+    onStore (\s -> storeSetCenter s x y defaultSetCenterOptions)
+
+  FlowFitBounds bounds ->
+    onStore (\s -> storeFitBounds s bounds
+      (FitBoundsOptions 0.1 defaultViewportHelperOptions))
 
   FlowFitView -> onStore (`storeFitView` defaultFitViewOptions)
 

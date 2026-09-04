@@ -14,8 +14,9 @@ WASM_BIN     = $(WASM_DIST)/build/wasm32-wasi/ghc-9.12.2.20250327/miso-flow-0.1.
 .PHONY: all native test golden browser-test js wasm bridge serve serve-wasm clean ci-wasm ci-bridge
 
 # CI (inside the flake dev shells; see .github/workflows/deploy.yml):
-# `make ci-wasm` in .#wasm assembles the WASM demo into ./public,
-# `make ci-bridge` in .#ghcjs adds the minified gesture bridge.
+# `make ci-bridge` in .#ghcjs builds the minified gesture bridge, then
+# `make ci-wasm` in .#wasm assembles the WASM demo into ./public
+# (js/miso-flow.js is spliced into the build at compile time).
 WASM_CABAL = wasm32-wasi-cabal
 
 all: js
@@ -39,13 +40,18 @@ browser-test:
 js: bridge
 	cabal build exe:miso-flow-example --builddir=$(JS_DIST) --with-ghc=$(JS_GHC) --with-hc-pkg=$(JS_GHC_PKG)
 	cp -v $(JSEXE)/all.js example/static/app.js
-	cp -v js/miso-flow.js example/static/miso-flow.js
 
+# --enable-shared: the bridge is spliced in via TH, and the wasm
+# external interpreter needs dependencies built as shared libraries.
+# The splice re-reads js/miso-flow.js only when Bridge.hs recompiles;
+# neither cabal (mtimes) nor GHC (source hashes) sees the bridge
+# change on its own, so poke both.
 wasm: bridge
-	cabal build exe:miso-flow-example --builddir=$(WASM_DIST) --with-ghc=$(WASM_GHC) --with-hc-pkg=$(WASM_GHC_PKG)
+	touch src/Miso/Flow/Internal/Bridge.hs
+	rm -f $(WASM_DIST)/build/wasm32-wasi/*/miso-flow-*/build/Miso/Flow/Internal/Bridge.*
+	cabal build exe:miso-flow-example --builddir=$(WASM_DIST) --with-ghc=$(WASM_GHC) --with-hc-pkg=$(WASM_GHC_PKG) --enable-shared
 	bun $$($(WASM_GHC) --print-libdir)/post-link.mjs --input $(WASM_BIN) --output example/static-wasm/ghc_wasm_jsffi.js
 	cp -v $(WASM_BIN) example/static-wasm/app.wasm
-	cp -v js/miso-flow.js example/static-wasm/miso-flow.js
 
 bridge:
 	bun run build
@@ -58,22 +64,22 @@ serve-wasm:
 
 ci-wasm:
 	$(WASM_CABAL) update
-	$(WASM_CABAL) build exe:miso-flow-example --builddir=$(WASM_DIST)
+	$(WASM_CABAL) build exe:miso-flow-example --builddir=$(WASM_DIST) --enable-shared
 	rm -rf public
 	mkdir -p public
 	cp -v example/static-wasm/index.html example/static-wasm/index.js public/
 	$(eval ci_wasm_bin=$(shell $(WASM_CABAL) list-bin miso-flow-example --builddir=$(WASM_DIST) | tail -n 1))
 	$(shell wasm32-wasi-ghc --print-libdir)/post-link.mjs --input $(ci_wasm_bin) --output public/ghc_wasm_jsffi.js
 	cp -v $(ci_wasm_bin) public/app.wasm
+	cp -v js/miso-flow.js public/miso-flow.js
 	wasm-opt -all -O2 public/app.wasm -o public/app.wasm
 	wasm-tools strip -o public/app.wasm public/app.wasm
 
 ci-bridge:
 	bun install --frozen-lockfile
 	bun run prod
-	cp -v js/miso-flow.js public/miso-flow.js
 
 clean:
 	rm -rf dist-newstyle $(JS_DIST) $(WASM_DIST) public \
-	  example/static/app.js example/static/miso-flow.js \
-	  example/static-wasm/app.wasm example/static-wasm/ghc_wasm_jsffi.js example/static-wasm/miso-flow.js
+	  example/static/app.js \
+	  example/static-wasm/app.wasm example/static-wasm/ghc_wasm_jsffi.js

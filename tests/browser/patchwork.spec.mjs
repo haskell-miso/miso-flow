@@ -17,8 +17,13 @@ const center = (b) => ({ x: b.x + b.width / 2, y: b.y + b.height / 2 });
 
 await page.goto('http://localhost:8931/index.html');
 await page.waitForTimeout(1500);
-await page.click('.miso-flow__controls button:nth-child(3)'); // fit
+await page.click('.miso-flow__controls button:nth-child(4)'); // fit
 await page.waitForTimeout(700);
+
+// cable tag + both marker kinds in defs
+assert('permanent cable tag', (await page.locator('.pw-cable-tag').textContent()) === 'control');
+assert('open and closed markers defined', await q('.miso-flow__edges marker') === 2,
+  `got ${await q('.miso-flow__edges marker')}`);
 
 // --- 1. validator: osc-a -> out is refused (red line, no edge)
 const edges0 = await q('.miso-flow__edge');
@@ -101,6 +106,85 @@ await page.locator('.miso-flow__edge-toolbar button').click();
 await page.waitForTimeout(400);
 assert('unpatch removed the cable', await q('.miso-flow__edge') === edgesBeforeUnpatch - 1);
 
+// --- 10b. hide / unhide, non-deletable flag, drag handle, exact zoom, framing
+await page.click('.miso-flow__controls button:nth-child(4)'); // fit (controls grew)
+await page.waitForTimeout(600);
+
+// hide the delay via its toolbar; its cables disappear with it
+const edgesBeforeHide = await q('.miso-flow__edge');
+await page.locator('.miso-flow__node[data-id="delay"] .pw-grip').click();
+await page.waitForTimeout(300);
+await page.locator('.miso-flow__node-toolbar button', { hasText: 'hide' }).click();
+await page.waitForTimeout(400);
+assert('hidden module has no visible card',
+  await page.evaluate(() =>
+    document.querySelector('.miso-flow__node[data-id="delay"]').offsetParent === null));
+assert('edges to hidden module are gone', await q('.miso-flow__edge') < edgesBeforeHide,
+  `${edgesBeforeHide} -> ${await q('.miso-flow__edge')}`);
+await page.locator('.pw-toggle', { hasText: 'hidden' }).click();
+await page.waitForTimeout(400);
+assert('show-hidden restores the module',
+  await page.evaluate(() =>
+    document.querySelector('.miso-flow__node[data-id="delay"]').offsetParent !== null));
+assert('edges restored with it', await q('.miso-flow__edge') === edgesBeforeHide);
+
+// the main out refuses deletion: no delete button, Delete key is a no-op
+await page.locator('.miso-flow__node[data-id="out"]').click();
+await page.waitForTimeout(300);
+assert('non-deletable module has no delete button',
+  await page.evaluate(() =>
+    [...document.querySelectorAll('.miso-flow__node-toolbar button')]
+      .every((b) => b.textContent !== 'delete')));
+const nodesBeforeOut = await q('.miso-flow__node');
+await page.keyboard.press('Delete');
+await page.waitForTimeout(400);
+assert('delete key respects nodeDeletable', await q('.miso-flow__node') === nodesBeforeOut);
+await page.mouse.click(720, 830);
+await page.waitForTimeout(300);
+
+// delay only drags by its grip
+const dt0 = await page.evaluate(() =>
+  document.querySelector('.miso-flow__node[data-id="delay"]').style.transform);
+const dcard = await page.locator('.miso-flow__node[data-id="delay"] .pw-name').boundingBox();
+await page.mouse.move(dcard.x + 10, dcard.y + 5);
+await page.mouse.down();
+await page.mouse.move(dcard.x + 70, dcard.y + 45, { steps: 5 });
+await page.mouse.up();
+await page.waitForTimeout(400);
+assert('card body does not drag (dragHandle)',
+  await page.evaluate(() =>
+    document.querySelector('.miso-flow__node[data-id="delay"]').style.transform) === dt0);
+const grip = await page.locator('.miso-flow__node[data-id="delay"] .pw-grip').boundingBox();
+await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+await page.mouse.down();
+await page.mouse.move(grip.x + 60, grip.y + 40, { steps: 5 });
+await page.mouse.up();
+await page.waitForTimeout(400);
+assert('grip drags the module (dragHandle)',
+  await page.evaluate(() =>
+    document.querySelector('.miso-flow__node[data-id="delay"]').style.transform) !== dt0);
+
+// exact zoom via 1:1 control
+await page.click('.miso-flow__controls button:nth-child(3)');
+await page.waitForTimeout(600);
+assert('1:1 control sets zoom 100%',
+  (await page.locator('.pw-status').textContent()).includes('zoom 100%'));
+
+// frame the group from its toolbar
+const vpBeforeFrame = await page.evaluate(() =>
+  document.querySelector('.xyflow__viewport').style.transform);
+const vg = await page.locator('.miso-flow__node[data-id="voice"]').boundingBox();
+await page.mouse.click(vg.x + vg.width - 30, vg.y + 12);
+await page.waitForTimeout(300);
+await page.locator('.miso-flow__node-toolbar button', { hasText: 'frame' }).click();
+await page.waitForTimeout(600);
+assert('frame button fits the group',
+  await page.evaluate(() =>
+    document.querySelector('.xyflow__viewport').style.transform) !== vpBeforeFrame);
+await page.mouse.click(720, 830);
+await page.waitForTimeout(300);
+
+
 // --- 5. keyboard delete: select delay, press Delete
 const nodesBefore = await q('.miso-flow__node');
 await page.locator('.miso-flow__node[data-id="delay"]').click();
@@ -138,7 +222,7 @@ assert('drag position snapped to 20px grid',
   JSON.stringify(snapped));
 
 // --- 8. subflow: dragging the Voice group carries its children
-await page.click('.miso-flow__controls button:nth-child(3)'); // re-fit for a known layout
+await page.click('.miso-flow__controls button:nth-child(4)'); // re-fit for a known layout
 await page.waitForTimeout(600);
 const envBefore = await page.evaluate(() =>
   document.querySelector('.miso-flow__node[data-id="env"]').style.transform);
@@ -157,11 +241,11 @@ assert('group drag moved child with it', envAfter !== envBefore, `${envBefore} -
 assert('named cv handle present', await q('.miso-flow__handle[data-handleid="cv"]') === 1);
 
 // --- 10. node toolbar delete + resizer on selection
-await page.click('.miso-flow__controls button:nth-child(3)');
+await page.click('.miso-flow__controls button:nth-child(4)');
 await page.waitForTimeout(600);
 await page.locator('.miso-flow__node[data-id="lfo"]').click();
 await page.waitForTimeout(400);
-assert('node toolbar on selection', await q('.miso-flow__node-toolbar button') === 1);
+assert('node toolbar on selection', await q('.miso-flow__node-toolbar button') === 2);
 assert('resize controls on selection',
   await q('.miso-flow__node[data-id="lfo"] .miso-flow__resize-control') === 8);
 const rb = await page.locator('.miso-flow__node[data-id="lfo"] .miso-flow__resize-control.handle.bottom-right').boundingBox();
@@ -174,7 +258,7 @@ await page.waitForTimeout(400);
 const lfoW2 = (await page.locator('.miso-flow__node[data-id="lfo"]').boundingBox()).width;
 assert('module resized', lfoW2 > lfoW + 20, `${lfoW} -> ${lfoW2}`);
 const nodesBeforeTb = await q('.miso-flow__node');
-await page.locator('.miso-flow__node-toolbar button').click();
+await page.locator('.miso-flow__node-toolbar button', { hasText: 'delete' }).click();
 await page.waitForTimeout(400);
 assert('node toolbar delete works', await q('.miso-flow__node') === nodesBeforeTb - 1);
 

@@ -254,7 +254,14 @@ nodeView
   -> Node n
   -> View ctx model action
 nodeView cfg@FlowViewConfig {..} FlowScene {..} n
-  | nodeHidden n = H.div_ [ key_ (nodeId n), P.class_ "miso-flow__node", P.hidden_ True ] []
+  | nodeHidden n =
+      H.div_
+        [ key_ (nodeId n)
+        , P.class_ "miso-flow__node"
+        , textProp "data-id" (nodeId n)
+        , P.hidden_ True
+        ]
+        []
   | otherwise =
       H.div_
         ( [ key_ (nodeId n)
@@ -266,6 +273,10 @@ nodeView cfg@FlowViewConfig {..} FlowScene {..} n
               , justWhen draggable "nopan"
               ]
           , textProp "data-id" (nodeId n)
+            -- always set explicitly: miso clears removed boolean
+            -- properties via setAttribute(name, ''), which would leave
+            -- a previously hidden node hidden
+          , P.hidden_ False
           , style_ nodeStyles
           , onCreatedWith (hookNodeCreated fvcHooks (nodeId n))
           , onBeforeDestroyedWith (hookNodeBeforeDestroyed fvcHooks (nodeId n))
@@ -356,8 +367,15 @@ edgesView cfg FlowScene {..} =
   S.svg_
     [ P.class_ "miso-flow__edges" ]
     ( markerDefs (fvcFlowId cfg) sceneEdges
-    : map (edgeView cfg sceneNodeLookup) (filter (not . edgeHidden) sceneEdges)
+    : map (edgeView cfg sceneNodeLookup) (filter visible sceneEdges)
     )
+  where
+    hiddenNode nid =
+      maybe False (nodeHidden . internalUserNode) (M.lookup nid sceneNodeLookup)
+    visible e =
+      not (edgeHidden e)
+        && not (hiddenNode (edgeSource e))
+        && not (hiddenNode (edgeTarget e))
 -----------------------------------------------------------------------------
 edgeView
   :: FlowViewConfig ctx n e model action

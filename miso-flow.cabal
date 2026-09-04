@@ -58,6 +58,12 @@ library
       base       >= 4.12 && < 5
     , containers < 0.9
     , miso       >= 1.13
+  if impl(ghcjs) || arch(javascript)
+    js-sources:
+      js/miso-flow.js
+  if arch(wasm32)
+    cpp-options:
+      -DWASM
 
 executable miso-flow-example
   import: opts
@@ -65,6 +71,7 @@ executable miso-flow-example
   main-is: Main.hs
   build-depends:
       base
+    , containers
     , miso
     , miso-flow
   if arch(javascript)

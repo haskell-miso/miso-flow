@@ -294,6 +294,10 @@ export class MisoFlowStore {
 
     this.paneNode.addEventListener('click', this.handlePaneClick);
     this.paneNode.addEventListener('mousedown', this.handleSelectionStart);
+    // undo scroll events on the wrapper: browsers scroll overflow-hidden
+    // containers to keep focused elements in view, which would shift the
+    // whole canvas (same defense as the framework packages)
+    this.domNode.addEventListener('scroll', this.handleContainerScroll);
     window.addEventListener('keydown', this.handleKeyChange);
     window.addEventListener('keyup', this.handleKeyChange);
     window.addEventListener('blur', this.handleWindowBlur);
@@ -318,6 +322,10 @@ export class MisoFlowStore {
     ) {
       this.callbacks.onDeleteKey?.(JSON.stringify({}));
     }
+  };
+
+  private handleContainerScroll = () => {
+    this.domNode.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   };
 
   private handleWindowBlur = () => {
@@ -983,6 +991,7 @@ export class MisoFlowStore {
     this.destroyed = true;
     this.paneNode.removeEventListener('click', this.handlePaneClick);
     this.paneNode.removeEventListener('mousedown', this.handleSelectionStart);
+    this.domNode.removeEventListener('scroll', this.handleContainerScroll);
     window.removeEventListener('keydown', this.handleKeyChange);
     window.removeEventListener('keyup', this.handleKeyChange);
     window.removeEventListener('blur', this.handleWindowBlur);

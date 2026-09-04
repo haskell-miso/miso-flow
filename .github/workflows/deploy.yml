@@ -35,11 +35,11 @@ jobs:
       - name: Golden tests against the TypeScript reference
         run: nix develop --command bash -c "cabal update && cabal test miso-flow-golden"
 
-      - name: Build WASM demo into ./public
-        run: nix develop .#wasm --command bash -c "make ci-wasm"
-
       - name: Build gesture bridge
         run: nix develop .#ghcjs --command bash -c "make ci-bridge"
+
+      - name: Build WASM demo into ./public
+        run: nix develop .#wasm --command bash -c "make ci-wasm"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
