@@ -1,8 +1,8 @@
 packages:
   .
 
--- miso 1.13 with the destroy-hook DOMRef fix (dmjio/miso#1636).
--- For local development against a checkout, override with a
+-- miso master with the destroy-hook DOMRef fix (dmjio/miso#1636,
+-- merged). For local development against a checkout, override with a
 -- cabal.project.local instead.
 source-repository-package
   type: git
