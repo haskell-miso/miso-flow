@@ -14,3 +14,4 @@ example/static-wasm/app.wasm
 example/static-wasm/ghc_wasm_jsffi.js
 example/static-wasm/miso-flow.js
 *~undo-tree~*
+public/

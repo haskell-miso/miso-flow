@@ -1,0 +1,62 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install cachix
+        uses: cachix/cachix-action@v17
+        with:
+          name: haskell-miso-cachix
+
+      - name: Golden tests against the TypeScript reference
+        run: nix develop --command bash -c "cabal update && cabal test miso-flow-golden"
+
+      - name: Build WASM demo into ./public
+        run: nix develop .#wasm --command bash -c "make ci-wasm"
+
+      - name: Build gesture bridge
+        run: nix develop .#ghcjs --command bash -c "make ci-bridge"
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: ./public
+
+  deploy:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    needs: build
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
