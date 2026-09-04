@@ -6,7 +6,8 @@
   "license": "BSD-3-Clause",
   "scripts": {
     "build": "bun build ts/miso-flow.ts --outfile js/miso-flow.js --format iife",
-    "prod": "bun build ts/miso-flow.ts --outfile js/miso-flow.js --format iife --minify"
+    "prod": "bun build ts/miso-flow.ts --outfile js/miso-flow.js --format iife --minify",
+    "browser-test": "bun tests/browser/patchwork.spec.mjs"
   },
   "dependencies": {
     "@types/d3-drag": "^3.0.7",
@@ -18,5 +19,8 @@
     "d3-interpolate": "^3.0.1",
     "d3-selection": "^3.0.0",
     "d3-zoom": "^3.0.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0"
   }
 }

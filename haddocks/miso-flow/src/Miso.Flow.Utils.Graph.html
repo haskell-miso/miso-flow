@@ -1,0 +1,1047 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE RecordWildCards   #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE TupleSections     #-}</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- |</span><span>
+</span><span id="line-7"></span><span class="hs-comment">-- Module      :  Miso.Flow.Utils.Graph</span><span>
+</span><span id="line-8"></span><span class="hs-comment">-- License     :  BSD3-style (see the file LICENSE)</span><span>
+</span><span id="line-9"></span><span class="hs-comment">--</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- Pure port of @utils\/graph.ts@ from @\@xyflow\/system@.</span><span>
+</span><span id="line-11"></span><span class="hs-comment">----------------------------------------------------------------------------</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Graph.html"><span class="hs-identifier">Miso.Flow.Utils.Graph</span></a></span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getOutgoers"><span class="hs-identifier">getOutgoers</span></a></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getIncomers"><span class="hs-identifier">getIncomers</span></a></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getNodePositionWithOrigin"><span class="hs-identifier">getNodePositionWithOrigin</span></a></span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getNodesBounds"><span class="hs-identifier">getNodesBounds</span></a></span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getNodesBoundsWithLookup"><span class="hs-identifier">getNodesBoundsWithLookup</span></a></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getInternalNodesBounds"><span class="hs-identifier">getInternalNodesBounds</span></a></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getNodesInside"><span class="hs-identifier">getNodesInside</span></a></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getConnectedEdges"><span class="hs-identifier">getConnectedEdges</span></a></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getFitViewNodes"><span class="hs-identifier">getFitViewNodes</span></a></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#fitViewportFor"><span class="hs-identifier">fitViewportFor</span></a></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#calculateNodePosition"><span class="hs-identifier">calculateNodePosition</span></a></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getElementsToRemove"><span class="hs-identifier">getElementsToRemove</span></a></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromMaybe</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">mapMaybe</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">isJust</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">S</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-31"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Miso.Flow.Constants.html"><span class="hs-identifier">Miso.Flow.Constants</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Constants.html#infiniteExtent"><span class="hs-identifier">infiniteExtent</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Miso.Flow.Types.html"><span class="hs-identifier">Miso.Flow.Types</span></a></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Miso.Flow.Utils.General.html"><span class="hs-identifier">Miso.Flow.Utils.General</span></a></span><span>
+</span><span id="line-35"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-36"></span><span class="annot"><span class="hs-comment">-- | Nodes connected to the given node as the target of an edge.</span></span><span>
+</span><span id="line-37"></span><span id="local-6989586621679176807"><span id="local-6989586621679176809"><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getOutgoers"><span class="hs-identifier hs-type">getOutgoers</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#NodeId"><span class="hs-identifier hs-type">NodeId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Node"><span class="hs-identifier hs-type">Node</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176807"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Edge"><span class="hs-identifier hs-type">Edge</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176809"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Node"><span class="hs-identifier hs-type">Node</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176807"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-38"></span><span id="getOutgoers"><span class="annot"><span class="annottext">getOutgoers :: forall n e. NodeId -&gt; [Node n] -&gt; [Edge e] -&gt; [Node n]
+</span><a href="Miso.Flow.Utils.Graph.html#getOutgoers"><span class="hs-identifier hs-var hs-var">getOutgoers</span></a></span></span><span> </span><span id="local-6989586621679176964"><span class="annot"><span class="annottext">NodeId
+</span><a href="#local-6989586621679176964"><span class="hs-identifier hs-var">nid</span></a></span></span><span> </span><span id="local-6989586621679176965"><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679176965"><span class="hs-identifier hs-var">nodes</span></a></span></span><span> </span><span id="local-6989586621679176966"><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679176966"><span class="hs-identifier hs-var">edges</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679176970"><span class="annot"><span class="annottext">outgoerIds :: Set NodeId
+</span><a href="#local-6989586621679176970"><span class="hs-identifier hs-var hs-var">outgoerIds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[NodeId] -&gt; Set NodeId
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><span class="hs-identifier hs-var">S.fromList</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Edge e -&gt; NodeId
+forall e. Edge e -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#edgeTarget"><span class="hs-identifier hs-var">edgeTarget</span></a></span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679176973"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621679176973"><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679176973"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679176966"><span class="hs-identifier hs-var">edges</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Edge e -&gt; NodeId
+forall e. Edge e -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#edgeSource"><span class="hs-identifier hs-var">edgeSource</span></a></span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679176973"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">NodeId -&gt; NodeId -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">NodeId
+</span><a href="#local-6989586621679176964"><span class="hs-identifier hs-var">nid</span></a></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679176975"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621679176975"><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679176975"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679176965"><span class="hs-identifier hs-var">nodes</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Node n -&gt; NodeId
+forall n. Node n -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#nodeId"><span class="hs-identifier hs-var">nodeId</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679176975"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">NodeId -&gt; Set NodeId -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><span class="hs-operator hs-var">`S.member`</span></span><span> </span><span class="annot"><span class="annottext">Set NodeId
+</span><a href="#local-6989586621679176970"><span class="hs-identifier hs-var">outgoerIds</span></a></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-42"></span><span class="annot"><span class="hs-comment">-- | Nodes connected to the given node as the source of an edge.</span></span><span>
+</span><span id="line-43"></span><span id="local-6989586621679176978"><span id="local-6989586621679176979"><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getIncomers"><span class="hs-identifier hs-type">getIncomers</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#NodeId"><span class="hs-identifier hs-type">NodeId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Node"><span class="hs-identifier hs-type">Node</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176978"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Edge"><span class="hs-identifier hs-type">Edge</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176979"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Node"><span class="hs-identifier hs-type">Node</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176978"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-44"></span><span id="getIncomers"><span class="annot"><span class="annottext">getIncomers :: forall n e. NodeId -&gt; [Node n] -&gt; [Edge e] -&gt; [Node n]
+</span><a href="Miso.Flow.Utils.Graph.html#getIncomers"><span class="hs-identifier hs-var hs-var">getIncomers</span></a></span></span><span> </span><span id="local-6989586621679176981"><span class="annot"><span class="annottext">NodeId
+</span><a href="#local-6989586621679176981"><span class="hs-identifier hs-var">nid</span></a></span></span><span> </span><span id="local-6989586621679176982"><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679176982"><span class="hs-identifier hs-var">nodes</span></a></span></span><span> </span><span id="local-6989586621679176983"><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679176983"><span class="hs-identifier hs-var">edges</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679176986"><span class="annot"><span class="annottext">incomerIds :: Set NodeId
+</span><a href="#local-6989586621679176986"><span class="hs-identifier hs-var hs-var">incomerIds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[NodeId] -&gt; Set NodeId
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><span class="hs-identifier hs-var">S.fromList</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Edge e -&gt; NodeId
+forall e. Edge e -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#edgeSource"><span class="hs-identifier hs-var">edgeSource</span></a></span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679176987"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621679176987"><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679176987"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679176983"><span class="hs-identifier hs-var">edges</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Edge e -&gt; NodeId
+forall e. Edge e -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#edgeTarget"><span class="hs-identifier hs-var">edgeTarget</span></a></span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679176987"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">NodeId -&gt; NodeId -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">NodeId
+</span><a href="#local-6989586621679176981"><span class="hs-identifier hs-var">nid</span></a></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679176988"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621679176988"><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679176988"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679176982"><span class="hs-identifier hs-var">nodes</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Node n -&gt; NodeId
+forall n. Node n -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#nodeId"><span class="hs-identifier hs-var">nodeId</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679176988"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">NodeId -&gt; Set NodeId -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><span class="hs-operator hs-var">`S.member`</span></span><span> </span><span class="annot"><span class="annottext">Set NodeId
+</span><a href="#local-6989586621679176986"><span class="hs-identifier hs-var">incomerIds</span></a></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-47"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-48"></span><span class="annot"><span class="hs-comment">-- | Position of a node adjusted by its origin.</span></span><span>
+</span><span id="line-49"></span><span id="local-6989586621679176821"><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getNodePositionWithOrigin"><span class="hs-identifier hs-type">getNodePositionWithOrigin</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#Node"><span class="hs-identifier hs-type">Node</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176821"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#NodeOrigin"><span class="hs-identifier hs-type">NodeOrigin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#XYPosition"><span class="hs-identifier hs-type">XYPosition</span></a></span></span><span>
+</span><span id="line-50"></span><span id="getNodePositionWithOrigin"><span class="annot"><span class="annottext">getNodePositionWithOrigin :: forall n. Node n -&gt; NodeOrigin -&gt; XYPosition
+</span><a href="Miso.Flow.Utils.Graph.html#getNodePositionWithOrigin"><span class="hs-identifier hs-var hs-var">getNodePositionWithOrigin</span></a></span></span><span> </span><span id="local-6989586621679176993"><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679176993"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679176994"><span class="annot"><span class="annottext">NodeOrigin
+</span><a href="#local-6989586621679176994"><span class="hs-identifier hs-var">nodeOrigin'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#Dimensions"><span class="hs-identifier hs-type">Dimensions</span></a></span><span> </span><span id="local-6989586621679176996"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679176996"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span id="local-6989586621679176997"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679176997"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Node n -&gt; Dimensions
+forall n. Node n -&gt; Dimensions
+</span><a href="Miso.Flow.Utils.General.html#getNodeDimensions"><span class="hs-identifier hs-var">getNodeDimensions</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679176993"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-52"></span><span>      </span><span class="annot"><a href="Miso.Flow.Types.html#NodeOrigin"><span class="hs-identifier hs-type">NodeOrigin</span></a></span><span> </span><span id="local-6989586621679177000"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177000"><span class="hs-identifier hs-var">ox</span></a></span></span><span> </span><span id="local-6989586621679177001"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177001"><span class="hs-identifier hs-var">oy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NodeOrigin -&gt; Maybe NodeOrigin -&gt; NodeOrigin
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">NodeOrigin
+</span><a href="#local-6989586621679176994"><span class="hs-identifier hs-var">nodeOrigin'</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Node n -&gt; Maybe NodeOrigin
+forall n. Node n -&gt; Maybe NodeOrigin
+</span><a href="Miso.Flow.Types.html#nodeOrigin"><span class="hs-identifier hs-var">nodeOrigin</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679176993"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; XYPosition
+</span><a href="Miso.Flow.Types.html#XYPosition"><span class="hs-identifier hs-var">XYPosition</span></a></span><span>
+</span><span id="line-54"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">XYPosition -&gt; Double
+</span><a href="Miso.Flow.Types.html#xyX"><span class="hs-identifier hs-var">xyX</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Node n -&gt; XYPosition
+forall n. Node n -&gt; XYPosition
+</span><a href="Miso.Flow.Types.html#nodePosition"><span class="hs-identifier hs-var">nodePosition</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679176993"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679176996"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177000"><span class="hs-identifier hs-var">ox</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">XYPosition -&gt; Double
+</span><a href="Miso.Flow.Types.html#xyY"><span class="hs-identifier hs-var">xyY</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Node n -&gt; XYPosition
+forall n. Node n -&gt; XYPosition
+</span><a href="Miso.Flow.Types.html#nodePosition"><span class="hs-identifier hs-var">nodePosition</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679176993"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679176997"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177001"><span class="hs-identifier hs-var">oy</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- | Bounding box containing all given nodes (no lookup: positions are</span><span>
+</span><span id="line-58"></span><span class="hs-comment">-- taken from the user nodes and the given origin).</span><span>
+</span><span id="line-59"></span><span id="local-6989586621679176831"><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getNodesBounds"><span class="hs-identifier hs-type">getNodesBounds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Node"><span class="hs-identifier hs-type">Node</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176831"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#NodeOrigin"><span class="hs-identifier hs-type">NodeOrigin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#Rect"><span class="hs-identifier hs-type">Rect</span></a></span></span><span>
+</span><span id="line-60"></span><span id="getNodesBounds"><span class="annot"><span class="annottext">getNodesBounds :: forall n. [Node n] -&gt; NodeOrigin -&gt; Rect
+</span><a href="Miso.Flow.Utils.Graph.html#getNodesBounds"><span class="hs-identifier hs-var hs-var">getNodesBounds</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">NodeOrigin
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double -&gt; Double -&gt; Rect
+</span><a href="Miso.Flow.Types.html#Rect"><span class="hs-identifier hs-var">Rect</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-61"></span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getNodesBounds"><span class="hs-identifier hs-var">getNodesBounds</span></a></span><span> </span><span id="local-6989586621679177011"><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679177011"><span class="hs-identifier hs-var">nodes</span></a></span></span><span> </span><span id="local-6989586621679177012"><span class="annot"><span class="annottext">NodeOrigin
+</span><a href="#local-6989586621679177012"><span class="hs-identifier hs-var">origin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><span class="annottext">Box -&gt; Rect
+</span><a href="Miso.Flow.Utils.General.html#boxToRect"><span class="hs-identifier hs-var">boxToRect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Box -&gt; Node n -&gt; Box) -&gt; Box -&gt; [Node n] -&gt; Box
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; [a] -&gt; b
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldl</span></span><span> </span><span class="annot"><span class="annottext">Box -&gt; Node n -&gt; Box
+forall {n}. Box -&gt; Node n -&gt; Box
+</span><a href="#local-6989586621679177015"><span class="hs-identifier hs-var">step</span></a></span><span> </span><span class="annot"><span class="annottext">Box
+</span><a href="Miso.Flow.Utils.Graph.html#emptyBox"><span class="hs-identifier hs-var">emptyBox</span></a></span><span> </span><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679177011"><span class="hs-identifier hs-var">nodes</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-64"></span><span>    </span><span id="local-6989586621679177015"><span class="annot"><span class="annottext">step :: Box -&gt; Node n -&gt; Box
+</span><a href="#local-6989586621679177015"><span class="hs-identifier hs-var hs-var">step</span></a></span></span><span> </span><span id="local-6989586621679177017"><span class="annot"><span class="annottext">Box
+</span><a href="#local-6989586621679177017"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span id="local-6989586621679177018"><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177018"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Box -&gt; Box -&gt; Box
+</span><a href="Miso.Flow.Utils.General.html#getBoundsOfBoxes"><span class="hs-identifier hs-var">getBoundsOfBoxes</span></a></span><span> </span><span class="annot"><span class="annottext">Box
+</span><a href="#local-6989586621679177017"><span class="hs-identifier hs-var">acc</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Node n -&gt; NodeOrigin -&gt; Box
+forall n. Node n -&gt; NodeOrigin -&gt; Box
+</span><a href="Miso.Flow.Utils.General.html#nodeToBox"><span class="hs-identifier hs-var">nodeToBox</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177018"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">NodeOrigin
+</span><a href="#local-6989586621679177012"><span class="hs-identifier hs-var">origin</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- | Bounding box containing all the given node ids, resolved through a</span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- 'NodeLookup' so sub-flow (parent) positions are correct. Unknown ids</span><span>
+</span><span id="line-68"></span><span class="hs-comment">-- are skipped.</span><span>
+</span><span id="line-69"></span><span id="local-6989586621679176840"><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getNodesBoundsWithLookup"><span class="hs-identifier hs-type">getNodesBoundsWithLookup</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#NodeId"><span class="hs-identifier hs-type">NodeId</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#NodeLookup"><span class="hs-identifier hs-type">NodeLookup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176840"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#Rect"><span class="hs-identifier hs-type">Rect</span></a></span></span><span>
+</span><span id="line-70"></span><span id="getNodesBoundsWithLookup"><span class="annot"><span class="annottext">getNodesBoundsWithLookup :: forall n. [NodeId] -&gt; NodeLookup n -&gt; Rect
+</span><a href="Miso.Flow.Utils.Graph.html#getNodesBoundsWithLookup"><span class="hs-identifier hs-var hs-var">getNodesBoundsWithLookup</span></a></span></span><span> </span><span id="local-6989586621679177023"><span class="annot"><span class="annottext">[NodeId]
+</span><a href="#local-6989586621679177023"><span class="hs-identifier hs-var">ids</span></a></span></span><span> </span><span id="local-6989586621679177024"><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177024"><span class="hs-identifier hs-var">nodeLookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">(NodeId -&gt; Maybe (InternalNode n)) -&gt; [NodeId] -&gt; [InternalNode n]
+forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NodeId -&gt; NodeLookup n -&gt; Maybe (InternalNode n)
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><span class="hs-operator hs-var">`M.lookup`</span></span><span> </span><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177024"><span class="hs-identifier hs-var">nodeLookup</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[NodeId]
+</span><a href="#local-6989586621679177023"><span class="hs-identifier hs-var">ids</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-72"></span><span>    </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double -&gt; Double -&gt; Rect
+</span><a href="Miso.Flow.Types.html#Rect"><span class="hs-identifier hs-var">Rect</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-73"></span><span>    </span><span id="local-6989586621679177026"><span class="annot"><span class="annottext">[InternalNode n]
+</span><a href="#local-6989586621679177026"><span class="hs-identifier hs-var">found</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Box -&gt; Rect
+</span><a href="Miso.Flow.Utils.General.html#boxToRect"><span class="hs-identifier hs-var">boxToRect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Box -&gt; InternalNode n -&gt; Box) -&gt; Box -&gt; [InternalNode n] -&gt; Box
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; [a] -&gt; b
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldl</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679177027"><span class="annot"><span class="annottext">Box
+</span><a href="#local-6989586621679177027"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span id="local-6989586621679177028"><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177028"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Box -&gt; Box -&gt; Box
+</span><a href="Miso.Flow.Utils.General.html#getBoundsOfBoxes"><span class="hs-identifier hs-var">getBoundsOfBoxes</span></a></span><span> </span><span class="annot"><span class="annottext">Box
+</span><a href="#local-6989586621679177027"><span class="hs-identifier hs-var">acc</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InternalNode n -&gt; Box
+forall n. InternalNode n -&gt; Box
+</span><a href="Miso.Flow.Utils.General.html#internalNodeToBox"><span class="hs-identifier hs-var">internalNodeToBox</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177028"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Box
+</span><a href="Miso.Flow.Utils.Graph.html#emptyBox"><span class="hs-identifier hs-var">emptyBox</span></a></span><span> </span><span class="annot"><span class="annottext">[InternalNode n]
+</span><a href="#local-6989586621679177026"><span class="hs-identifier hs-var">found</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-75"></span><span class="annot"><span class="hs-comment">-- | Bounding box of the internal nodes matching the filter.</span></span><span>
+</span><span id="line-76"></span><span id="local-6989586621679176850"><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getInternalNodesBounds"><span class="hs-identifier hs-type">getInternalNodesBounds</span></a></span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Types.html#InternalNode"><span class="hs-identifier hs-type">InternalNode</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176850"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#NodeLookup"><span class="hs-identifier hs-type">NodeLookup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176850"><span class="hs-identifier hs-type">n</span></a></span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#Rect"><span class="hs-identifier hs-type">Rect</span></a></span></span><span>
+</span><span id="line-80"></span><span id="getInternalNodesBounds"><span class="annot"><span class="annottext">getInternalNodesBounds :: forall n. (InternalNode n -&gt; Bool) -&gt; NodeLookup n -&gt; Rect
+</span><a href="Miso.Flow.Utils.Graph.html#getInternalNodesBounds"><span class="hs-identifier hs-var hs-var">getInternalNodesBounds</span></a></span></span><span> </span><span id="local-6989586621679177031"><span class="annot"><span class="annottext">InternalNode n -&gt; Bool
+</span><a href="#local-6989586621679177031"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621679177032"><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177032"><span class="hs-identifier hs-var">nodeLookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">(InternalNode n -&gt; Bool) -&gt; [InternalNode n] -&gt; [InternalNode n]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="annot"><span class="annottext">InternalNode n -&gt; Bool
+</span><a href="#local-6989586621679177031"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NodeLookup n -&gt; [InternalNode n]
+forall k a. Map k a -&gt; [a]
+</span><span class="hs-identifier hs-var">M.elems</span></span><span> </span><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177032"><span class="hs-identifier hs-var">nodeLookup</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-82"></span><span>    </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double -&gt; Double -&gt; Rect
+</span><a href="Miso.Flow.Types.html#Rect"><span class="hs-identifier hs-var">Rect</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-83"></span><span>    </span><span id="local-6989586621679177034"><span class="annot"><span class="annottext">[InternalNode n]
+</span><a href="#local-6989586621679177034"><span class="hs-identifier hs-var">visible</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">Box -&gt; Rect
+</span><a href="Miso.Flow.Utils.General.html#boxToRect"><span class="hs-identifier hs-var">boxToRect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Box -&gt; InternalNode n -&gt; Box) -&gt; Box -&gt; [InternalNode n] -&gt; Box
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; [a] -&gt; b
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldl</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679177035"><span class="annot"><span class="annottext">Box
+</span><a href="#local-6989586621679177035"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span id="local-6989586621679177036"><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177036"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Box -&gt; Box -&gt; Box
+</span><a href="Miso.Flow.Utils.General.html#getBoundsOfBoxes"><span class="hs-identifier hs-var">getBoundsOfBoxes</span></a></span><span> </span><span class="annot"><span class="annottext">Box
+</span><a href="#local-6989586621679177035"><span class="hs-identifier hs-var">acc</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InternalNode n -&gt; Box
+forall n. InternalNode n -&gt; Box
+</span><a href="Miso.Flow.Utils.General.html#internalNodeToBox"><span class="hs-identifier hs-var">internalNodeToBox</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177036"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Box
+</span><a href="Miso.Flow.Utils.Graph.html#emptyBox"><span class="hs-identifier hs-var">emptyBox</span></a></span><span> </span><span class="annot"><span class="annottext">[InternalNode n]
+</span><a href="#local-6989586621679177034"><span class="hs-identifier hs-var">visible</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-86"></span><span class="annot"><a href="Miso.Flow.Utils.Graph.html#emptyBox"><span class="hs-identifier hs-type">emptyBox</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#Box"><span class="hs-identifier hs-type">Box</span></a></span><span>
+</span><span id="line-87"></span><span id="emptyBox"><span class="annot"><span class="annottext">emptyBox :: Box
+</span><a href="Miso.Flow.Utils.Graph.html#emptyBox"><span class="hs-identifier hs-var hs-var">emptyBox</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double -&gt; Double -&gt; Box
+</span><a href="Miso.Flow.Types.html#Box"><span class="hs-identifier hs-var">Box</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">1</span></span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Fractional a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">/</span></span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">1</span></span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Fractional a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">/</span></span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">1</span></span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Fractional a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">/</span></span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">1</span></span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Fractional a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">/</span></span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-89"></span><span class="annot"><span class="hs-comment">-- | Internal nodes inside (or partially inside) the given rect.</span></span><span>
+</span><span id="line-90"></span><span id="local-6989586621679176856"><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getNodesInside"><span class="hs-identifier hs-type">getNodesInside</span></a></span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#NodeLookup"><span class="hs-identifier hs-type">NodeLookup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176856"><span class="hs-identifier hs-type">n</span></a></span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#Rect"><span class="hs-identifier hs-type">Rect</span></a></span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#Transform"><span class="hs-identifier hs-type">Transform</span></a></span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-95"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ partially: also include nodes only partially inside</span></span><span>
+</span><span id="line-96"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-97"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ exclude non-selectable nodes</span></span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#InternalNode"><span class="hs-identifier hs-type">InternalNode</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176856"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-99"></span><span id="getNodesInside"><span class="annot"><span class="annottext">getNodesInside :: forall n.
+NodeLookup n
+-&gt; Rect -&gt; Transform -&gt; Bool -&gt; Bool -&gt; [InternalNode n]
+</span><a href="Miso.Flow.Utils.Graph.html#getNodesInside"><span class="hs-identifier hs-var hs-var">getNodesInside</span></a></span></span><span> </span><span id="local-6989586621679177039"><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177039"><span class="hs-identifier hs-var">nodeLookup</span></a></span></span><span> </span><span id="local-6989586621679177040"><span class="annot"><span class="annottext">Rect
+</span><a href="#local-6989586621679177040"><span class="hs-identifier hs-var">rect</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Types.html#Viewport"><span class="hs-identifier hs-type">Viewport</span></a></span><span> </span><span id="local-6989586621679177042"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177042"><span class="hs-identifier hs-var">tx</span></a></span></span><span> </span><span id="local-6989586621679177043"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177043"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span id="local-6989586621679177044"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177044"><span class="hs-identifier hs-var">tScale</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679177045"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679177045"><span class="hs-identifier hs-var">partially</span></a></span></span><span> </span><span id="local-6989586621679177046"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679177046"><span class="hs-identifier hs-var">excludeNonSelectable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177047"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621679177047"><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177047"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NodeLookup n -&gt; [InternalNode n]
+forall k a. Map k a -&gt; [a]
+</span><span class="hs-identifier hs-var">M.elems</span></span><span> </span><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177039"><span class="hs-identifier hs-var">nodeLookup</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InternalNode n -&gt; Node n -&gt; Bool
+forall {n} {n}. InternalNode n -&gt; Node n -&gt; Bool
+</span><a href="#local-6989586621679177048"><span class="hs-identifier hs-var">keep</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177047"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InternalNode n -&gt; Node n
+forall n. InternalNode n -&gt; Node n
+</span><a href="Miso.Flow.Types.html#internalUser"><span class="hs-identifier hs-var">internalUser</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177047"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-102"></span><span>    </span><span id="local-6989586621679177052"><span class="annot"><span class="annottext">paneX :: Double
+</span><a href="#local-6989586621679177052"><span class="hs-identifier hs-var hs-var">paneX</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Rect -&gt; Double
+</span><a href="Miso.Flow.Types.html#rectX"><span class="hs-identifier hs-var">rectX</span></a></span><span> </span><span class="annot"><span class="annottext">Rect
+</span><a href="#local-6989586621679177040"><span class="hs-identifier hs-var">rect</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177042"><span class="hs-identifier hs-var">tx</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Fractional a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">/</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177044"><span class="hs-identifier hs-var">tScale</span></a></span><span>
+</span><span id="line-103"></span><span>    </span><span id="local-6989586621679177056"><span class="annot"><span class="annottext">paneY :: Double
+</span><a href="#local-6989586621679177056"><span class="hs-identifier hs-var hs-var">paneY</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Rect -&gt; Double
+</span><a href="Miso.Flow.Types.html#rectY"><span class="hs-identifier hs-var">rectY</span></a></span><span> </span><span class="annot"><span class="annottext">Rect
+</span><a href="#local-6989586621679177040"><span class="hs-identifier hs-var">rect</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177043"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Fractional a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">/</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177044"><span class="hs-identifier hs-var">tScale</span></a></span><span>
+</span><span id="line-104"></span><span>    </span><span id="local-6989586621679177059"><span class="annot"><span class="annottext">paneWidth :: Double
+</span><a href="#local-6989586621679177059"><span class="hs-identifier hs-var hs-var">paneWidth</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Rect -&gt; Double
+</span><a href="Miso.Flow.Types.html#rectWidth"><span class="hs-identifier hs-var">rectWidth</span></a></span><span> </span><span class="annot"><span class="annottext">Rect
+</span><a href="#local-6989586621679177040"><span class="hs-identifier hs-var">rect</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Fractional a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">/</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177044"><span class="hs-identifier hs-var">tScale</span></a></span><span>
+</span><span id="line-105"></span><span>    </span><span id="local-6989586621679177062"><span class="annot"><span class="annottext">paneHeight :: Double
+</span><a href="#local-6989586621679177062"><span class="hs-identifier hs-var hs-var">paneHeight</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Rect -&gt; Double
+</span><a href="Miso.Flow.Types.html#rectHeight"><span class="hs-identifier hs-var">rectHeight</span></a></span><span> </span><span class="annot"><span class="annottext">Rect
+</span><a href="#local-6989586621679177040"><span class="hs-identifier hs-var">rect</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Fractional a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">/</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177044"><span class="hs-identifier hs-var">tScale</span></a></span><span>
+</span><span id="line-106"></span><span>    </span><span id="local-6989586621679177048"><span class="annot"><span class="annottext">keep :: InternalNode n -&gt; Node n -&gt; Bool
+</span><a href="#local-6989586621679177048"><span class="hs-identifier hs-var hs-var">keep</span></a></span></span><span> </span><span id="local-6989586621679177064"><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177064"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679177065"><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177065"><span class="hs-identifier hs-var">u</span></a></span></span><span>
+</span><span id="line-107"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679177046"><span class="hs-identifier hs-var">excludeNonSelectable</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Maybe Bool -&gt; Bool
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Node n -&gt; Maybe Bool
+forall n. Node n -&gt; Maybe Bool
+</span><a href="Miso.Flow.Types.html#nodeSelectable"><span class="hs-identifier hs-var">nodeSelectable</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177065"><span class="hs-identifier hs-var">u</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-108"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Node n -&gt; Bool
+forall n. Node n -&gt; Bool
+</span><a href="Miso.Flow.Types.html#nodeHidden"><span class="hs-identifier hs-var">nodeHidden</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177065"><span class="hs-identifier hs-var">u</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-109"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-110"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#Dimensions"><span class="hs-identifier hs-type">Dimensions</span></a></span><span> </span><span id="local-6989586621679177070"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177070"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span id="local-6989586621679177071"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177071"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InternalNode n -&gt; Dimensions
+forall n. InternalNode n -&gt; Dimensions
+</span><a href="Miso.Flow.Utils.General.html#getInternalNodeDimensions"><span class="hs-identifier hs-var">getInternalNodeDimensions</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177064"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-111"></span><span>              </span><span class="annot"><a href="Miso.Flow.Types.html#XYPosition"><span class="hs-identifier hs-type">XYPosition</span></a></span><span> </span><span id="local-6989586621679177073"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177073"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679177074"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177074"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InternalNode n -&gt; XYPosition
+forall n. InternalNode n -&gt; XYPosition
+</span><a href="Miso.Flow.Types.html#internalPositionAbsolute"><span class="hs-identifier hs-var">internalPositionAbsolute</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177064"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-112"></span><span>              </span><span id="local-6989586621679177076"><span class="annot"><span class="annottext">overlappingArea :: Double
+</span><a href="#local-6989586621679177076"><span class="hs-identifier hs-var hs-var">overlappingArea</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-113"></span><span>                </span><span class="annot"><span class="annottext">Double
+-&gt; Double
+-&gt; Double
+-&gt; Double
+-&gt; Double
+-&gt; Double
+-&gt; Double
+-&gt; Double
+-&gt; Double
+</span><a href="Miso.Flow.Utils.General.html#getRectsOverlappingArea"><span class="hs-identifier hs-var">getRectsOverlappingArea</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177052"><span class="hs-identifier hs-var">paneX</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177056"><span class="hs-identifier hs-var">paneY</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177059"><span class="hs-identifier hs-var">paneWidth</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177062"><span class="hs-identifier hs-var">paneHeight</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177073"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177074"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177070"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177071"><span class="hs-identifier hs-var">h</span></a></span><span>
+</span><span id="line-114"></span><span>              </span><span id="local-6989586621679177079"><span class="annot"><span class="annottext">area :: Double
+</span><a href="#local-6989586621679177079"><span class="hs-identifier hs-var hs-var">area</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177070"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177071"><span class="hs-identifier hs-var">h</span></a></span><span>
+</span><span id="line-115"></span><span>              </span><span id="local-6989586621679177083"><span class="annot"><span class="annottext">partiallyVisible :: Bool
+</span><a href="#local-6989586621679177083"><span class="hs-identifier hs-var hs-var">partiallyVisible</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679177045"><span class="hs-identifier hs-var">partially</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177076"><span class="hs-identifier hs-var">overlappingArea</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-116"></span><span>              </span><span id="local-6989586621679177089"><span class="annot"><span class="annottext">forceInitialRender :: Bool
+</span><a href="#local-6989586621679177089"><span class="hs-identifier hs-var hs-var">forceInitialRender</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InternalNode n -&gt; Maybe NodeHandleBounds
+forall n. InternalNode n -&gt; Maybe NodeHandleBounds
+</span><a href="Miso.Flow.Types.html#internalHandleBounds"><span class="hs-identifier hs-var">internalHandleBounds</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177064"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe NodeHandleBounds -&gt; Maybe NodeHandleBounds -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Maybe NodeHandleBounds
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-117"></span><span>              </span><span id="local-6989586621679177092"><span class="annot"><span class="annottext">isVisible :: Bool
+</span><a href="#local-6989586621679177092"><span class="hs-identifier hs-var hs-var">isVisible</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-118"></span><span>                </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679177089"><span class="hs-identifier hs-var">forceInitialRender</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679177083"><span class="hs-identifier hs-var">partiallyVisible</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177076"><span class="hs-identifier hs-var">overlappingArea</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177079"><span class="hs-identifier hs-var">area</span></a></span><span>
+</span><span id="line-119"></span><span>          </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679177092"><span class="hs-identifier hs-var">isVisible</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Node n -&gt; Bool
+forall n. Node n -&gt; Bool
+</span><a href="Miso.Flow.Types.html#nodeDragging"><span class="hs-identifier hs-var">nodeDragging</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177065"><span class="hs-identifier hs-var">u</span></a></span><span>
+</span><span id="line-120"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-121"></span><span class="annot"><span class="hs-comment">-- | Edges where either endpoint is one of the given nodes.</span></span><span>
+</span><span id="line-122"></span><span id="local-6989586621679176871"><span id="local-6989586621679176872"><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getConnectedEdges"><span class="hs-identifier hs-type">getConnectedEdges</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Node"><span class="hs-identifier hs-type">Node</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176871"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Edge"><span class="hs-identifier hs-type">Edge</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176872"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Edge"><span class="hs-identifier hs-type">Edge</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176872"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-123"></span><span id="getConnectedEdges"><span class="annot"><span class="annottext">getConnectedEdges :: forall n e. [Node n] -&gt; [Edge e] -&gt; [Edge e]
+</span><a href="Miso.Flow.Utils.Graph.html#getConnectedEdges"><span class="hs-identifier hs-var hs-var">getConnectedEdges</span></a></span></span><span> </span><span id="local-6989586621679177097"><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679177097"><span class="hs-identifier hs-var">nodes</span></a></span></span><span> </span><span id="local-6989586621679177098"><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679177098"><span class="hs-identifier hs-var">edges</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-124"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679177100"><span class="annot"><span class="annottext">nodeIds :: Set NodeId
+</span><a href="#local-6989586621679177100"><span class="hs-identifier hs-var hs-var">nodeIds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[NodeId] -&gt; Set NodeId
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><span class="hs-identifier hs-var">S.fromList</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Node n -&gt; NodeId) -&gt; [Node n] -&gt; [NodeId]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Node n -&gt; NodeId
+forall n. Node n -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#nodeId"><span class="hs-identifier hs-var">nodeId</span></a></span><span> </span><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679177097"><span class="hs-identifier hs-var">nodes</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177101"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621679177101"><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177101"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679177098"><span class="hs-identifier hs-var">edges</span></a></span><span>
+</span><span id="line-126"></span><span>     </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Edge e -&gt; NodeId
+forall e. Edge e -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#edgeSource"><span class="hs-identifier hs-var">edgeSource</span></a></span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177101"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">NodeId -&gt; Set NodeId -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><span class="hs-operator hs-var">`S.member`</span></span><span> </span><span class="annot"><span class="annottext">Set NodeId
+</span><a href="#local-6989586621679177100"><span class="hs-identifier hs-var">nodeIds</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Edge e -&gt; NodeId
+forall e. Edge e -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#edgeTarget"><span class="hs-identifier hs-var">edgeTarget</span></a></span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177101"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">NodeId -&gt; Set NodeId -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><span class="hs-operator hs-var">`S.member`</span></span><span> </span><span class="annot"><span class="annottext">Set NodeId
+</span><a href="#local-6989586621679177100"><span class="hs-identifier hs-var">nodeIds</span></a></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-127"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-128"></span><span class="annot"><span class="hs-comment">-- | Which nodes participate in a fit-view; port of @getFitViewNodes@.</span></span><span>
+</span><span id="line-129"></span><span id="local-6989586621679176877"><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getFitViewNodes"><span class="hs-identifier hs-type">getFitViewNodes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#NodeLookup"><span class="hs-identifier hs-type">NodeLookup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176877"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#FitViewOptions"><span class="hs-identifier hs-type">FitViewOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#NodeLookup"><span class="hs-identifier hs-type">NodeLookup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176877"><span class="hs-identifier hs-type">n</span></a></span></span><span>
+</span><span id="line-130"></span><span id="getFitViewNodes"><span class="annot"><span class="annottext">getFitViewNodes :: forall n. NodeLookup n -&gt; FitViewOptions -&gt; NodeLookup n
+</span><a href="Miso.Flow.Utils.Graph.html#getFitViewNodes"><span class="hs-identifier hs-var hs-var">getFitViewNodes</span></a></span></span><span> </span><span id="local-6989586621679177102"><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177102"><span class="hs-identifier hs-var">nodeLookup</span></a></span></span><span> </span><span id="local-6989586621679177103"><span class="annot"><span class="annottext">FitViewOptions
+</span><a href="#local-6989586621679177103"><span class="hs-identifier hs-var">opts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><span class="annottext">(InternalNode n -&gt; Bool) -&gt; NodeLookup n -&gt; NodeLookup n
+forall a k. (a -&gt; Bool) -&gt; Map k a -&gt; Map k a
+</span><span class="hs-identifier hs-var">M.filter</span></span><span> </span><span class="annot"><span class="annottext">InternalNode n -&gt; Bool
+forall {n}. InternalNode n -&gt; Bool
+</span><a href="#local-6989586621679177105"><span class="hs-identifier hs-var">keep</span></a></span><span> </span><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177106"><span class="hs-identifier hs-var">restricted</span></a></span><span>
+</span><span id="line-132"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-133"></span><span>    </span><span id="local-6989586621679177106"><span class="annot"><span class="annottext">restricted :: NodeLookup n
+</span><a href="#local-6989586621679177106"><span class="hs-identifier hs-var hs-var">restricted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">FitViewOptions -&gt; Maybe [NodeId]
+</span><a href="Miso.Flow.Types.html#fitViewNodes"><span class="hs-identifier hs-var">fitViewNodes</span></a></span><span> </span><span class="annot"><span class="annottext">FitViewOptions
+</span><a href="#local-6989586621679177103"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-134"></span><span>      </span><span class="annot"><span class="annottext">Maybe [NodeId]
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177102"><span class="hs-identifier hs-var">nodeLookup</span></a></span><span>
+</span><span id="line-135"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679177109"><span class="annot"><span class="annottext">[NodeId]
+</span><a href="#local-6989586621679177109"><span class="hs-identifier hs-var">ids</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-136"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679177111"><span class="annot"><span class="annottext">idSet :: Set NodeId
+</span><a href="#local-6989586621679177111"><span class="hs-identifier hs-var hs-var">idSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[NodeId] -&gt; Set NodeId
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><span class="hs-identifier hs-var">S.fromList</span></span><span> </span><span class="annot"><span class="annottext">[NodeId]
+</span><a href="#local-6989586621679177109"><span class="hs-identifier hs-var">ids</span></a></span><span>
+</span><span id="line-137"></span><span>        </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">(NodeId -&gt; InternalNode n -&gt; Bool) -&gt; NodeLookup n -&gt; NodeLookup n
+forall k a. (k -&gt; a -&gt; Bool) -&gt; Map k a -&gt; Map k a
+</span><span class="hs-identifier hs-var">M.filterWithKey</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679177113"><span class="annot"><span class="annottext">NodeId
+</span><a href="#local-6989586621679177113"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NodeId
+</span><a href="#local-6989586621679177113"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">NodeId -&gt; Set NodeId -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><span class="hs-operator hs-var">`S.member`</span></span><span> </span><span class="annot"><span class="annottext">Set NodeId
+</span><a href="#local-6989586621679177111"><span class="hs-identifier hs-var">idSet</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177102"><span class="hs-identifier hs-var">nodeLookup</span></a></span><span>
+</span><span id="line-138"></span><span>    </span><span id="local-6989586621679177105"><span class="annot"><span class="annottext">keep :: InternalNode n -&gt; Bool
+</span><a href="#local-6989586621679177105"><span class="hs-identifier hs-var hs-var">keep</span></a></span></span><span> </span><span id="local-6989586621679177124"><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177124"><span class="hs-identifier hs-var">n</span></a></span></span><span>
+</span><span id="line-139"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">FitViewOptions -&gt; Bool
+</span><a href="Miso.Flow.Types.html#fitViewIncludeHiddenNodes"><span class="hs-identifier hs-var">fitViewIncludeHiddenNodes</span></a></span><span> </span><span class="annot"><span class="annottext">FitViewOptions
+</span><a href="#local-6989586621679177103"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-140"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#Dimensions"><span class="hs-identifier hs-type">Dimensions</span></a></span><span> </span><span id="local-6989586621679177126"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177126"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span id="local-6989586621679177127"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177127"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InternalNode n -&gt; Dimensions
+forall n. InternalNode n -&gt; Dimensions
+</span><a href="Miso.Flow.Utils.General.html#getInternalNodeDimensions"><span class="hs-identifier hs-var">getInternalNodeDimensions</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177124"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-141"></span><span>          </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177126"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177127"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-142"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-143"></span><span>          </span><span class="annot"><span class="annottext">Maybe Double -&gt; Bool
+forall a. Maybe a -&gt; Bool
+</span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Measured -&gt; Maybe Double
+</span><a href="Miso.Flow.Types.html#measuredWidth"><span class="hs-identifier hs-var">measuredWidth</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InternalNode n -&gt; Measured
+forall n. InternalNode n -&gt; Measured
+</span><a href="Miso.Flow.Types.html#internalMeasured"><span class="hs-identifier hs-var">internalMeasured</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177124"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-144"></span><span>            </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Measured -&gt; Maybe Double
+</span><a href="Miso.Flow.Types.html#measuredWidth"><span class="hs-identifier hs-var">measuredWidth</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InternalNode n -&gt; Measured
+forall n. InternalNode n -&gt; Measured
+</span><a href="Miso.Flow.Types.html#internalMeasured"><span class="hs-identifier hs-var">internalMeasured</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177124"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Double -&gt; Maybe Double -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Maybe Double
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-145"></span><span>            </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Double -&gt; Bool
+forall a. Maybe a -&gt; Bool
+</span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Measured -&gt; Maybe Double
+</span><a href="Miso.Flow.Types.html#measuredHeight"><span class="hs-identifier hs-var">measuredHeight</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InternalNode n -&gt; Measured
+forall n. InternalNode n -&gt; Measured
+</span><a href="Miso.Flow.Types.html#internalMeasured"><span class="hs-identifier hs-var">internalMeasured</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177124"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-146"></span><span>            </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Measured -&gt; Maybe Double
+</span><a href="Miso.Flow.Types.html#measuredHeight"><span class="hs-identifier hs-var">measuredHeight</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InternalNode n -&gt; Measured
+forall n. InternalNode n -&gt; Measured
+</span><a href="Miso.Flow.Types.html#internalMeasured"><span class="hs-identifier hs-var">internalMeasured</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177124"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Double -&gt; Maybe Double -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Maybe Double
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-147"></span><span>            </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Node n -&gt; Bool
+forall n. Node n -&gt; Bool
+</span><a href="Miso.Flow.Types.html#nodeHidden"><span class="hs-identifier hs-var">nodeHidden</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InternalNode n -&gt; Node n
+forall n. InternalNode n -&gt; Node n
+</span><a href="Miso.Flow.Types.html#internalUser"><span class="hs-identifier hs-var">internalUser</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177124"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-148"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-149"></span><span class="hs-comment">-- | Pure core of @fitViewport@: computes the viewport for fitting the</span><span>
+</span><span id="line-150"></span><span class="hs-comment">-- given nodes into @width@ &#215; @height@. Returns 'Nothing' for an empty</span><span>
+</span><span id="line-151"></span><span class="hs-comment">-- lookup (the effectful caller then leaves the viewport unchanged).</span><span>
+</span><span id="line-152"></span><span id="local-6989586621679176888"><span class="annot"><a href="Miso.Flow.Utils.Graph.html#fitViewportFor"><span class="hs-identifier hs-type">fitViewportFor</span></a></span><span>
+</span><span id="line-153"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#NodeLookup"><span class="hs-identifier hs-type">NodeLookup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176888"><span class="hs-identifier hs-type">n</span></a></span><span>
+</span><span id="line-154"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span>
+</span><span id="line-155"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ width</span></span><span>
+</span><span id="line-156"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span>
+</span><span id="line-157"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ height</span></span><span>
+</span><span id="line-158"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span>
+</span><span id="line-159"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ min zoom</span></span><span>
+</span><span id="line-160"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span>
+</span><span id="line-161"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ max zoom</span></span><span>
+</span><span id="line-162"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#FitViewOptions"><span class="hs-identifier hs-type">FitViewOptions</span></a></span><span>
+</span><span id="line-163"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#Viewport"><span class="hs-identifier hs-type">Viewport</span></a></span></span><span>
+</span><span id="line-164"></span><span id="fitViewportFor"><span class="annot"><span class="annottext">fitViewportFor :: forall n.
+NodeLookup n
+-&gt; Double
+-&gt; Double
+-&gt; Double
+-&gt; Double
+-&gt; FitViewOptions
+-&gt; Maybe Transform
+</span><a href="Miso.Flow.Utils.Graph.html#fitViewportFor"><span class="hs-identifier hs-var hs-var">fitViewportFor</span></a></span></span><span> </span><span id="local-6989586621679177133"><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177133"><span class="hs-identifier hs-var">nodeLookup</span></a></span></span><span> </span><span id="local-6989586621679177134"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177134"><span class="hs-identifier hs-var">width</span></a></span></span><span> </span><span id="local-6989586621679177135"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177135"><span class="hs-identifier hs-var">height</span></a></span></span><span> </span><span id="local-6989586621679177136"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177136"><span class="hs-identifier hs-var">minZoom</span></a></span></span><span> </span><span id="local-6989586621679177137"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177137"><span class="hs-identifier hs-var">maxZoom</span></a></span></span><span> </span><span id="local-6989586621679177138"><span class="annot"><span class="annottext">FitViewOptions
+</span><a href="#local-6989586621679177138"><span class="hs-identifier hs-var">opts</span></a></span></span><span>
+</span><span id="line-165"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">NodeLookup n -&gt; Bool
+forall k a. Map k a -&gt; Bool
+</span><span class="hs-identifier hs-var">M.null</span></span><span> </span><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177133"><span class="hs-identifier hs-var">nodeLookup</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Transform
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-166"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-167"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679177140"><span class="annot"><span class="annottext">nodesToFit :: NodeLookup n
+</span><a href="#local-6989586621679177140"><span class="hs-identifier hs-var hs-var">nodesToFit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NodeLookup n -&gt; FitViewOptions -&gt; NodeLookup n
+forall n. NodeLookup n -&gt; FitViewOptions -&gt; NodeLookup n
+</span><a href="Miso.Flow.Utils.Graph.html#getFitViewNodes"><span class="hs-identifier hs-var">getFitViewNodes</span></a></span><span> </span><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177133"><span class="hs-identifier hs-var">nodeLookup</span></a></span><span> </span><span class="annot"><span class="annottext">FitViewOptions
+</span><a href="#local-6989586621679177138"><span class="hs-identifier hs-var">opts</span></a></span><span>
+</span><span id="line-168"></span><span>          </span><span id="local-6989586621679177141"><span class="annot"><span class="annottext">bounds :: Rect
+</span><a href="#local-6989586621679177141"><span class="hs-identifier hs-var hs-var">bounds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(InternalNode n -&gt; Bool) -&gt; NodeLookup n -&gt; Rect
+forall n. (InternalNode n -&gt; Bool) -&gt; NodeLookup n -&gt; Rect
+</span><a href="Miso.Flow.Utils.Graph.html#getInternalNodesBounds"><span class="hs-identifier hs-var">getInternalNodesBounds</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; InternalNode n -&gt; Bool
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177140"><span class="hs-identifier hs-var">nodesToFit</span></a></span><span>
+</span><span id="line-169"></span><span>      </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Transform -&gt; Maybe Transform
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Transform -&gt; Maybe Transform) -&gt; Transform -&gt; Maybe Transform
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Rect
+-&gt; Double -&gt; Double -&gt; Double -&gt; Double -&gt; Padding -&gt; Transform
+</span><a href="Miso.Flow.Utils.General.html#getViewportForBounds"><span class="hs-identifier hs-var">getViewportForBounds</span></a></span><span>
+</span><span id="line-170"></span><span>           </span><span class="annot"><span class="annottext">Rect
+</span><a href="#local-6989586621679177141"><span class="hs-identifier hs-var">bounds</span></a></span><span>
+</span><span id="line-171"></span><span>           </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177134"><span class="hs-identifier hs-var">width</span></a></span><span>
+</span><span id="line-172"></span><span>           </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177135"><span class="hs-identifier hs-var">height</span></a></span><span>
+</span><span id="line-173"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Maybe Double -&gt; Double
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177136"><span class="hs-identifier hs-var">minZoom</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FitViewOptions -&gt; Maybe Double
+</span><a href="Miso.Flow.Types.html#fitViewMinZoom"><span class="hs-identifier hs-var">fitViewMinZoom</span></a></span><span> </span><span class="annot"><span class="annottext">FitViewOptions
+</span><a href="#local-6989586621679177138"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-174"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Maybe Double -&gt; Double
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177137"><span class="hs-identifier hs-var">maxZoom</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FitViewOptions -&gt; Maybe Double
+</span><a href="Miso.Flow.Types.html#fitViewMaxZoom"><span class="hs-identifier hs-var">fitViewMaxZoom</span></a></span><span> </span><span class="annot"><span class="annottext">FitViewOptions
+</span><a href="#local-6989586621679177138"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-175"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FitViewOptions -&gt; Padding
+</span><a href="Miso.Flow.Types.html#fitViewPadding"><span class="hs-identifier hs-var">fitViewPadding</span></a></span><span> </span><span class="annot"><span class="annottext">FitViewOptions
+</span><a href="#local-6989586621679177138"><span class="hs-identifier hs-var">opts</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-176"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-177"></span><span class="hs-comment">-- | Next position of a node given its extent, parent and origin; port of</span><span>
+</span><span id="line-178"></span><span class="hs-comment">-- @calculateNodePosition@. Returns @(position, positionAbsolute)@;</span><span>
+</span><span id="line-179"></span><span class="hs-comment">-- 'Nothing' when the node is missing from the lookup.</span><span>
+</span><span id="line-180"></span><span id="local-6989586621679176899"><span class="annot"><a href="Miso.Flow.Utils.Graph.html#calculateNodePosition"><span class="hs-identifier hs-type">calculateNodePosition</span></a></span><span>
+</span><span id="line-181"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#NodeId"><span class="hs-identifier hs-type">NodeId</span></a></span><span>
+</span><span id="line-182"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#XYPosition"><span class="hs-identifier hs-type">XYPosition</span></a></span><span>
+</span><span id="line-183"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ next (absolute) position</span></span><span>
+</span><span id="line-184"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#NodeLookup"><span class="hs-identifier hs-type">NodeLookup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176899"><span class="hs-identifier hs-type">n</span></a></span><span>
+</span><span id="line-185"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#NodeOrigin"><span class="hs-identifier hs-type">NodeOrigin</span></a></span><span>
+</span><span id="line-186"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#CoordinateExtent"><span class="hs-identifier hs-type">CoordinateExtent</span></a></span><span>
+</span><span id="line-187"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ global node extent</span></span><span>
+</span><span id="line-188"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Types.html#XYPosition"><span class="hs-identifier hs-type">XYPosition</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#XYPosition"><span class="hs-identifier hs-type">XYPosition</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-189"></span><span id="calculateNodePosition"><span class="annot"><span class="annottext">calculateNodePosition :: forall n.
+NodeId
+-&gt; XYPosition
+-&gt; NodeLookup n
+-&gt; NodeOrigin
+-&gt; Maybe CoordinateExtent
+-&gt; Maybe (XYPosition, XYPosition)
+</span><a href="Miso.Flow.Utils.Graph.html#calculateNodePosition"><span class="hs-identifier hs-var hs-var">calculateNodePosition</span></a></span></span><span> </span><span id="local-6989586621679177158"><span class="annot"><span class="annottext">NodeId
+</span><a href="#local-6989586621679177158"><span class="hs-identifier hs-var">nid</span></a></span></span><span> </span><span id="local-6989586621679177159"><span class="annot"><span class="annottext">XYPosition
+</span><a href="#local-6989586621679177159"><span class="hs-identifier hs-var">nextPosition</span></a></span></span><span> </span><span id="local-6989586621679177160"><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177160"><span class="hs-identifier hs-var">nodeLookup</span></a></span></span><span> </span><span id="local-6989586621679177161"><span class="annot"><span class="annottext">NodeOrigin
+</span><a href="#local-6989586621679177161"><span class="hs-identifier hs-var">nodeOrigin'</span></a></span></span><span> </span><span id="local-6989586621679177162"><span class="annot"><span class="annottext">Maybe CoordinateExtent
+</span><a href="#local-6989586621679177162"><span class="hs-identifier hs-var">nodeExtent'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-190"></span><span>  </span><span id="local-6989586621679177163"><span class="annot"><a href="#local-6989586621679177163"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NodeId -&gt; NodeLookup n -&gt; Maybe (InternalNode n)
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">NodeId
+</span><a href="#local-6989586621679177158"><span class="hs-identifier hs-var">nid</span></a></span><span> </span><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177160"><span class="hs-identifier hs-var">nodeLookup</span></a></span><span>
+</span><span id="line-191"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679177164"><span class="annot"><a href="#local-6989586621679177164"><span class="hs-identifier hs-var hs-var">u</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InternalNode n -&gt; Node n
+forall n. InternalNode n -&gt; Node n
+</span><a href="Miso.Flow.Types.html#internalUser"><span class="hs-identifier hs-var">internalUser</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177163"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-192"></span><span>      </span><span id="local-6989586621679177167"><span class="annot"><a href="#local-6989586621679177167"><span class="hs-identifier hs-var hs-var">parentNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NodeId -&gt; NodeLookup n -&gt; Maybe (InternalNode n)
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><span class="hs-operator hs-var">`M.lookup`</span></span><span> </span><span class="annot"><span class="annottext">NodeLookup n
+</span><a href="#local-6989586621679177160"><span class="hs-identifier hs-var">nodeLookup</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NodeId -&gt; Maybe (InternalNode n))
+-&gt; Maybe NodeId -&gt; Maybe (InternalNode n)
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">Node n -&gt; Maybe NodeId
+forall n. Node n -&gt; Maybe NodeId
+</span><a href="Miso.Flow.Types.html#nodeParentId"><span class="hs-identifier hs-var">nodeParentId</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177164"><span class="hs-identifier hs-var">u</span></a></span><span>
+</span><span id="line-193"></span><span>      </span><span class="annot"><a href="Miso.Flow.Types.html#XYPosition"><span class="hs-identifier hs-type">XYPosition</span></a></span><span> </span><span id="local-6989586621679177170"><span class="annot"><a href="#local-6989586621679177170"><span class="hs-identifier hs-var">parentX</span></a></span></span><span> </span><span id="local-6989586621679177171"><span class="annot"><a href="#local-6989586621679177171"><span class="hs-identifier hs-var">parentY</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-194"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">maybe</span></span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#zeroPosition"><span class="hs-identifier hs-type">zeroPosition</span></a></span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#internalPositionAbsolute"><span class="hs-identifier hs-var">internalPositionAbsolute</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679177167"><span class="hs-identifier hs-type">parentNode</span></a></span><span>
+</span><span id="line-195"></span><span>      </span><span class="annot"><a href="Miso.Flow.Types.html#NodeOrigin"><span class="hs-identifier hs-type">NodeOrigin</span></a></span><span> </span><span id="local-6989586621679177174"><span class="annot"><a href="#local-6989586621679177174"><span class="hs-identifier hs-var">ox</span></a></span></span><span> </span><span id="local-6989586621679177175"><span class="annot"><a href="#local-6989586621679177175"><span class="hs-identifier hs-var">oy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">fromMaybe</span></span><span> </span><span class="annot"><a href="#local-6989586621679177161"><span class="hs-identifier hs-type">nodeOrigin'</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Types.html#nodeOrigin"><span class="hs-identifier hs-var">nodeOrigin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679177164"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-196"></span><span>      </span><span id="local-6989586621679177191"><span class="annot"><a href="#local-6989586621679177191"><span class="hs-identifier hs-var hs-var">extent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-197"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Node n -&gt; Maybe NodeExtent
+forall n. Node n -&gt; Maybe NodeExtent
+</span><a href="Miso.Flow.Types.html#nodeExtent"><span class="hs-identifier hs-var">nodeExtent</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177164"><span class="hs-identifier hs-var">u</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-198"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">NodeExtent
+</span><a href="Miso.Flow.Types.html#ExtentParent"><span class="hs-identifier hs-var">ExtentParent</span></a></span><span>
+</span><span id="line-199"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Node n -&gt; Bool
+forall n. Node n -&gt; Bool
+</span><a href="Miso.Flow.Types.html#nodeExpandParent"><span class="hs-identifier hs-var">nodeExpandParent</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177164"><span class="hs-identifier hs-var">u</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-200"></span><span>                </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (InternalNode n)
+</span><a href="#local-6989586621679177167"><span class="hs-identifier hs-var">parentNode</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-201"></span><span>                  </span><span class="annot"><span class="annottext">Maybe (InternalNode n)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CoordinateExtent -&gt; NodeExtent
+</span><a href="Miso.Flow.Types.html#ExtentCoordinates"><span class="hs-identifier hs-var">ExtentCoordinates</span></a></span><span> </span><span class="annot"><span class="annottext">(CoordinateExtent -&gt; NodeExtent)
+-&gt; Maybe CoordinateExtent -&gt; Maybe NodeExtent
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe CoordinateExtent
+</span><a href="#local-6989586621679177162"><span class="hs-identifier hs-var">nodeExtent'</span></a></span><span>
+</span><span id="line-202"></span><span>                  </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679177197"><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177197"><span class="hs-identifier hs-var">parent</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-203"></span><span>                    </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#Dimensions"><span class="hs-identifier hs-type">Dimensions</span></a></span><span> </span><span id="local-6989586621679177198"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177198"><span class="hs-identifier hs-var">pw</span></a></span></span><span> </span><span id="local-6989586621679177199"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177199"><span class="hs-identifier hs-var">ph</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InternalNode n -&gt; Dimensions
+forall n. InternalNode n -&gt; Dimensions
+</span><a href="Miso.Flow.Utils.General.html#getInternalNodeDimensions"><span class="hs-identifier hs-var">getInternalNodeDimensions</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177197"><span class="hs-identifier hs-var">parent</span></a></span><span>
+</span><span id="line-204"></span><span>                    </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177198"><span class="hs-identifier hs-var">pw</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177199"><span class="hs-identifier hs-var">ph</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-205"></span><span>                         </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">NodeExtent -&gt; Maybe NodeExtent
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(NodeExtent -&gt; Maybe NodeExtent) -&gt; NodeExtent -&gt; Maybe NodeExtent
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CoordinateExtent -&gt; NodeExtent
+</span><a href="Miso.Flow.Types.html#ExtentCoordinates"><span class="hs-identifier hs-var">ExtentCoordinates</span></a></span><span> </span><span class="annot"><span class="annottext">(CoordinateExtent -&gt; NodeExtent) -&gt; CoordinateExtent -&gt; NodeExtent
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double -&gt; Double -&gt; CoordinateExtent
+</span><a href="Miso.Flow.Types.html#CoordinateExtent"><span class="hs-identifier hs-var">CoordinateExtent</span></a></span><span>
+</span><span id="line-206"></span><span>                                </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177170"><span class="hs-identifier hs-var">parentX</span></a></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177171"><span class="hs-identifier hs-var">parentY</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177170"><span class="hs-identifier hs-var">parentX</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177198"><span class="hs-identifier hs-var">pw</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177171"><span class="hs-identifier hs-var">parentY</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177199"><span class="hs-identifier hs-var">ph</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-207"></span><span>                         </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">CoordinateExtent -&gt; NodeExtent
+</span><a href="Miso.Flow.Types.html#ExtentCoordinates"><span class="hs-identifier hs-var">ExtentCoordinates</span></a></span><span> </span><span class="annot"><span class="annottext">(CoordinateExtent -&gt; NodeExtent)
+-&gt; Maybe CoordinateExtent -&gt; Maybe NodeExtent
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe CoordinateExtent
+</span><a href="#local-6989586621679177162"><span class="hs-identifier hs-var">nodeExtent'</span></a></span><span>
+</span><span id="line-208"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Types.html#ExtentCoordinates"><span class="hs-identifier hs-type">ExtentCoordinates</span></a></span><span> </span><span id="local-6989586621679177202"><span class="annot"><span class="annottext">CoordinateExtent
+</span><a href="#local-6989586621679177202"><span class="hs-identifier hs-var">ce</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-209"></span><span>            </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (InternalNode n)
+</span><a href="#local-6989586621679177167"><span class="hs-identifier hs-var">parentNode</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-210"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NodeExtent -&gt; Maybe NodeExtent
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(NodeExtent -&gt; Maybe NodeExtent) -&gt; NodeExtent -&gt; Maybe NodeExtent
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CoordinateExtent -&gt; NodeExtent
+</span><a href="Miso.Flow.Types.html#ExtentCoordinates"><span class="hs-identifier hs-var">ExtentCoordinates</span></a></span><span> </span><span class="annot"><span class="annottext">(CoordinateExtent -&gt; NodeExtent) -&gt; CoordinateExtent -&gt; NodeExtent
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double -&gt; Double -&gt; CoordinateExtent
+</span><a href="Miso.Flow.Types.html#CoordinateExtent"><span class="hs-identifier hs-var">CoordinateExtent</span></a></span><span>
+</span><span id="line-211"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CoordinateExtent -&gt; Double
+</span><a href="Miso.Flow.Types.html#extentMinX"><span class="hs-identifier hs-var">extentMinX</span></a></span><span> </span><span class="annot"><span class="annottext">CoordinateExtent
+</span><a href="#local-6989586621679177202"><span class="hs-identifier hs-var">ce</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177170"><span class="hs-identifier hs-var">parentX</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CoordinateExtent -&gt; Double
+</span><a href="Miso.Flow.Types.html#extentMinY"><span class="hs-identifier hs-var">extentMinY</span></a></span><span> </span><span class="annot"><span class="annottext">CoordinateExtent
+</span><a href="#local-6989586621679177202"><span class="hs-identifier hs-var">ce</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177171"><span class="hs-identifier hs-var">parentY</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-212"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CoordinateExtent -&gt; Double
+</span><a href="Miso.Flow.Types.html#extentMaxX"><span class="hs-identifier hs-var">extentMaxX</span></a></span><span> </span><span class="annot"><span class="annottext">CoordinateExtent
+</span><a href="#local-6989586621679177202"><span class="hs-identifier hs-var">ce</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177170"><span class="hs-identifier hs-var">parentX</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CoordinateExtent -&gt; Double
+</span><a href="Miso.Flow.Types.html#extentMaxY"><span class="hs-identifier hs-var">extentMaxY</span></a></span><span> </span><span class="annot"><span class="annottext">CoordinateExtent
+</span><a href="#local-6989586621679177202"><span class="hs-identifier hs-var">ce</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679177171"><span class="hs-identifier hs-var">parentY</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-213"></span><span>              </span><span class="annot"><span class="annottext">Maybe (InternalNode n)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NodeExtent -&gt; Maybe NodeExtent
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CoordinateExtent -&gt; NodeExtent
+</span><a href="Miso.Flow.Types.html#ExtentCoordinates"><span class="hs-identifier hs-var">ExtentCoordinates</span></a></span><span> </span><span class="annot"><span class="annottext">CoordinateExtent
+</span><a href="#local-6989586621679177202"><span class="hs-identifier hs-var">ce</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-214"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">NodeExtent
+</span><a href="Miso.Flow.Types.html#ExtentParent"><span class="hs-identifier hs-var">ExtentParent</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CoordinateExtent -&gt; NodeExtent
+</span><a href="Miso.Flow.Types.html#ExtentCoordinates"><span class="hs-identifier hs-var">ExtentCoordinates</span></a></span><span> </span><span class="annot"><span class="annottext">(CoordinateExtent -&gt; NodeExtent)
+-&gt; Maybe CoordinateExtent -&gt; Maybe NodeExtent
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe CoordinateExtent
+</span><a href="#local-6989586621679177162"><span class="hs-identifier hs-var">nodeExtent'</span></a></span><span>
+</span><span id="line-215"></span><span>          </span><span class="annot"><span class="annottext">Maybe NodeExtent
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CoordinateExtent -&gt; NodeExtent
+</span><a href="Miso.Flow.Types.html#ExtentCoordinates"><span class="hs-identifier hs-var">ExtentCoordinates</span></a></span><span> </span><span class="annot"><span class="annottext">(CoordinateExtent -&gt; NodeExtent)
+-&gt; Maybe CoordinateExtent -&gt; Maybe NodeExtent
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe CoordinateExtent
+</span><a href="#local-6989586621679177162"><span class="hs-identifier hs-var">nodeExtent'</span></a></span><span>
+</span><span id="line-216"></span><span>      </span><span id="local-6989586621679177209"><span class="annot"><a href="#local-6989586621679177209"><span class="hs-identifier hs-var hs-var">measuredDims</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Dimensions
+</span><a href="Miso.Flow.Types.html#Dimensions"><span class="hs-identifier hs-var">Dimensions</span></a></span><span>
+</span><span id="line-217"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Maybe Double -&gt; Double
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Measured -&gt; Maybe Double
+</span><a href="Miso.Flow.Types.html#measuredWidth"><span class="hs-identifier hs-var">measuredWidth</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InternalNode n -&gt; Measured
+forall n. InternalNode n -&gt; Measured
+</span><a href="Miso.Flow.Types.html#internalMeasured"><span class="hs-identifier hs-var">internalMeasured</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177163"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-218"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Maybe Double -&gt; Double
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Measured -&gt; Maybe Double
+</span><a href="Miso.Flow.Types.html#measuredHeight"><span class="hs-identifier hs-var">measuredHeight</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InternalNode n -&gt; Measured
+forall n. InternalNode n -&gt; Measured
+</span><a href="Miso.Flow.Types.html#internalMeasured"><span class="hs-identifier hs-var">internalMeasured</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177163"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-219"></span><span>      </span><span id="local-6989586621679177210"><span class="annot"><a href="#local-6989586621679177210"><span class="hs-identifier hs-var hs-var">positionAbsolute</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-220"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe NodeExtent
+</span><a href="#local-6989586621679177191"><span class="hs-identifier hs-var">extent</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-221"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Types.html#ExtentCoordinates"><span class="hs-identifier hs-type">ExtentCoordinates</span></a></span><span> </span><span id="local-6989586621679177211"><span class="annot"><span class="annottext">CoordinateExtent
+</span><a href="#local-6989586621679177211"><span class="hs-identifier hs-var">ce</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">XYPosition -&gt; CoordinateExtent -&gt; Dimensions -&gt; XYPosition
+</span><a href="Miso.Flow.Utils.General.html#clampPosition"><span class="hs-identifier hs-var">clampPosition</span></a></span><span> </span><span class="annot"><span class="annottext">XYPosition
+</span><a href="#local-6989586621679177159"><span class="hs-identifier hs-var">nextPosition</span></a></span><span> </span><span class="annot"><span class="annottext">CoordinateExtent
+</span><a href="#local-6989586621679177211"><span class="hs-identifier hs-var">ce</span></a></span><span> </span><span class="annot"><span class="annottext">Dimensions
+</span><a href="#local-6989586621679177209"><span class="hs-identifier hs-var">measuredDims</span></a></span><span>
+</span><span id="line-222"></span><span>          </span><span class="annot"><span class="annottext">Maybe NodeExtent
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">XYPosition
+</span><a href="#local-6989586621679177159"><span class="hs-identifier hs-var">nextPosition</span></a></span><span>
+</span><span id="line-223"></span><span>      </span><span id="local-6989586621679177214"><span class="annot"><a href="#local-6989586621679177214"><span class="hs-identifier hs-var hs-var">mw</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Maybe Double -&gt; Double
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Measured -&gt; Maybe Double
+</span><a href="Miso.Flow.Types.html#measuredWidth"><span class="hs-identifier hs-var">measuredWidth</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InternalNode n -&gt; Measured
+forall n. InternalNode n -&gt; Measured
+</span><a href="Miso.Flow.Types.html#internalMeasured"><span class="hs-identifier hs-var">internalMeasured</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177163"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-224"></span><span>      </span><span id="local-6989586621679177216"><span class="annot"><a href="#local-6989586621679177216"><span class="hs-identifier hs-var hs-var">mh</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Maybe Double -&gt; Double
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Measured -&gt; Maybe Double
+</span><a href="Miso.Flow.Types.html#measuredHeight"><span class="hs-identifier hs-var">measuredHeight</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InternalNode n -&gt; Measured
+forall n. InternalNode n -&gt; Measured
+</span><a href="Miso.Flow.Types.html#internalMeasured"><span class="hs-identifier hs-var">internalMeasured</span></a></span><span> </span><span class="annot"><span class="annottext">InternalNode n
+</span><a href="#local-6989586621679177163"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-225"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">pure</span></span><span>
+</span><span id="line-226"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#XYPosition"><span class="hs-identifier hs-type">XYPosition</span></a></span><span>
+</span><span id="line-227"></span><span>        </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Types.html#xyX"><span class="hs-identifier hs-var">xyX</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679177210"><span class="hs-identifier hs-type">positionAbsolute</span></a></span><span> </span><span class="annot"><span class="hs-glyph hs-type">-</span></span><span> </span><span class="annot"><a href="#local-6989586621679177170"><span class="hs-identifier hs-type">parentX</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">+</span></span><span> </span><span class="annot"><a href="#local-6989586621679177214"><span class="hs-identifier hs-type">mw</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">*</span></span><span> </span><span class="annot"><a href="#local-6989586621679177174"><span class="hs-identifier hs-type">ox</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-228"></span><span>        </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Types.html#xyY"><span class="hs-identifier hs-var">xyY</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679177210"><span class="hs-identifier hs-type">positionAbsolute</span></a></span><span> </span><span class="annot"><span class="hs-glyph hs-type">-</span></span><span> </span><span class="annot"><a href="#local-6989586621679177171"><span class="hs-identifier hs-type">parentY</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">+</span></span><span> </span><span class="annot"><a href="#local-6989586621679177216"><span class="hs-identifier hs-type">mh</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">*</span></span><span> </span><span class="annot"><a href="#local-6989586621679177175"><span class="hs-identifier hs-type">oy</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-229"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679177210"><span class="hs-identifier hs-type">positionAbsolute</span></a></span><span>
+</span><span id="line-230"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-231"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-232"></span><span class="hs-comment">-- | Which of the requested nodes and edges may actually be deleted; port</span><span>
+</span><span id="line-233"></span><span class="hs-comment">-- of @getElementsToRemove@ (without the async @onBeforeDelete@ hook &#8212;</span><span>
+</span><span id="line-234"></span><span class="hs-comment">-- run your own check on the result instead).</span><span>
+</span><span id="line-235"></span><span id="local-6989586621679176915"><span id="local-6989586621679176916"><span class="annot"><a href="Miso.Flow.Utils.Graph.html#getElementsToRemove"><span class="hs-identifier hs-type">getElementsToRemove</span></a></span><span>
+</span><span id="line-236"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#NodeId"><span class="hs-identifier hs-type">NodeId</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-237"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ nodes to remove</span></span><span>
+</span><span id="line-238"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#EdgeId"><span class="hs-identifier hs-type">EdgeId</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-239"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ edges to remove</span></span><span>
+</span><span id="line-240"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Node"><span class="hs-identifier hs-type">Node</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176915"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-241"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ all nodes</span></span><span>
+</span><span id="line-242"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Edge"><span class="hs-identifier hs-type">Edge</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176916"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-243"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ all edges</span></span><span>
+</span><span id="line-244"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Node"><span class="hs-identifier hs-type">Node</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176915"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Edge"><span class="hs-identifier hs-type">Edge</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679176916"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-245"></span><span id="getElementsToRemove"><span class="annot"><span class="annottext">getElementsToRemove :: forall n e.
+[NodeId]
+-&gt; [NodeId] -&gt; [Node n] -&gt; [Edge e] -&gt; ([Node n], [Edge e])
+</span><a href="Miso.Flow.Utils.Graph.html#getElementsToRemove"><span class="hs-identifier hs-var hs-var">getElementsToRemove</span></a></span></span><span> </span><span id="local-6989586621679177218"><span class="annot"><span class="annottext">[NodeId]
+</span><a href="#local-6989586621679177218"><span class="hs-identifier hs-var">nodesToRemove</span></a></span></span><span> </span><span id="local-6989586621679177219"><span class="annot"><span class="annottext">[NodeId]
+</span><a href="#local-6989586621679177219"><span class="hs-identifier hs-var">edgesToRemove</span></a></span></span><span> </span><span id="local-6989586621679177220"><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679177220"><span class="hs-identifier hs-var">nodes</span></a></span></span><span> </span><span id="local-6989586621679177221"><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679177221"><span class="hs-identifier hs-var">edges</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-246"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679177222"><span class="hs-identifier hs-var">matchingNodes</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679177223"><span class="hs-identifier hs-var">matchingEdges</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-247"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-248"></span><span>    </span><span id="local-6989586621679177225"><span class="annot"><span class="annottext">nodeIds :: Set NodeId
+</span><a href="#local-6989586621679177225"><span class="hs-identifier hs-var hs-var">nodeIds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[NodeId] -&gt; Set NodeId
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><span class="hs-identifier hs-var">S.fromList</span></span><span> </span><span class="annot"><span class="annottext">[NodeId]
+</span><a href="#local-6989586621679177218"><span class="hs-identifier hs-var">nodesToRemove</span></a></span><span>
+</span><span id="line-249"></span><span>    </span><span id="local-6989586621679177222"><span class="annot"><span class="annottext">matchingNodes :: [Node n]
+</span><a href="#local-6989586621679177222"><span class="hs-identifier hs-var hs-var">matchingNodes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([Node n] -&gt; Node n -&gt; [Node n])
+-&gt; [Node n] -&gt; [Node n] -&gt; [Node n]
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; [a] -&gt; b
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldl</span></span><span> </span><span class="annot"><span class="annottext">[Node n] -&gt; Node n -&gt; [Node n]
+forall {n}. [Node n] -&gt; Node n -&gt; [Node n]
+</span><a href="#local-6989586621679177227"><span class="hs-identifier hs-var">step</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679177220"><span class="hs-identifier hs-var">nodes</span></a></span><span>
+</span><span id="line-250"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-251"></span><span>        </span><span id="local-6989586621679177227"><span class="annot"><span class="annottext">step :: [Node n] -&gt; Node n -&gt; [Node n]
+</span><a href="#local-6989586621679177227"><span class="hs-identifier hs-var hs-var">step</span></a></span></span><span> </span><span id="local-6989586621679177233"><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679177233"><span class="hs-identifier hs-var">acc</span></a></span></span><span> </span><span id="local-6989586621679177234"><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177234"><span class="hs-identifier hs-var">n</span></a></span></span><span>
+</span><span id="line-252"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Node n -&gt; Maybe Bool
+forall n. Node n -&gt; Maybe Bool
+</span><a href="Miso.Flow.Types.html#nodeDeletable"><span class="hs-identifier hs-var">nodeDeletable</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177234"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Bool -&gt; Maybe Bool -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Maybe Bool
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679177233"><span class="hs-identifier hs-var">acc</span></a></span><span>
+</span><span id="line-253"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679177236"><span class="hs-identifier hs-var">isIncluded</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679177237"><span class="hs-identifier hs-var">parentHit</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679177233"><span class="hs-identifier hs-var">acc</span></a></span><span> </span><span class="annot"><span class="annottext">[Node n] -&gt; [Node n] -&gt; [Node n]
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177234"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-254"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679177233"><span class="hs-identifier hs-var">acc</span></a></span><span>
+</span><span id="line-255"></span><span>          </span><span class="hs-keyword">where</span><span>
+</span><span id="line-256"></span><span>            </span><span id="local-6989586621679177236"><span class="annot"><span class="annottext">isIncluded :: Bool
+</span><a href="#local-6989586621679177236"><span class="hs-identifier hs-var hs-var">isIncluded</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Node n -&gt; NodeId
+forall n. Node n -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#nodeId"><span class="hs-identifier hs-var">nodeId</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177234"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">NodeId -&gt; Set NodeId -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><span class="hs-operator hs-var">`S.member`</span></span><span> </span><span class="annot"><span class="annottext">Set NodeId
+</span><a href="#local-6989586621679177225"><span class="hs-identifier hs-var">nodeIds</span></a></span><span>
+</span><span id="line-257"></span><span>            </span><span id="local-6989586621679177237"><span class="annot"><span class="annottext">parentHit :: Bool
+</span><a href="#local-6989586621679177237"><span class="hs-identifier hs-var hs-var">parentHit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-258"></span><span>              </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679177236"><span class="hs-identifier hs-var">isIncluded</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span>
+</span><span id="line-259"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Node n -&gt; Maybe NodeId
+forall n. Node n -&gt; Maybe NodeId
+</span><a href="Miso.Flow.Types.html#nodeParentId"><span class="hs-identifier hs-var">nodeParentId</span></a></span><span> </span><span class="annot"><span class="annottext">Node n
+</span><a href="#local-6989586621679177234"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-260"></span><span>                </span><span class="annot"><span class="annottext">Maybe NodeId
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-261"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679177241"><span class="annot"><span class="annottext">NodeId
+</span><a href="#local-6989586621679177241"><span class="hs-identifier hs-var">pid</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Node n -&gt; Bool) -&gt; [Node n] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">NodeId -&gt; NodeId -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">NodeId
+</span><a href="#local-6989586621679177241"><span class="hs-identifier hs-var">pid</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NodeId -&gt; Bool) -&gt; (Node n -&gt; NodeId) -&gt; Node n -&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Node n -&gt; NodeId
+forall n. Node n -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#nodeId"><span class="hs-identifier hs-var">nodeId</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679177233"><span class="hs-identifier hs-var">acc</span></a></span><span>
+</span><span id="line-262"></span><span>    </span><span id="local-6989586621679177245"><span class="annot"><span class="annottext">edgeIds :: Set NodeId
+</span><a href="#local-6989586621679177245"><span class="hs-identifier hs-var hs-var">edgeIds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[NodeId] -&gt; Set NodeId
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><span class="hs-identifier hs-var">S.fromList</span></span><span> </span><span class="annot"><span class="annottext">[NodeId]
+</span><a href="#local-6989586621679177219"><span class="hs-identifier hs-var">edgesToRemove</span></a></span><span>
+</span><span id="line-263"></span><span>    </span><span id="local-6989586621679177248"><span class="annot"><span class="annottext">deletableEdges :: [Edge e]
+</span><a href="#local-6989586621679177248"><span class="hs-identifier hs-var hs-var">deletableEdges</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177249"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621679177249"><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177249"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679177221"><span class="hs-identifier hs-var">edges</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Edge e -&gt; Maybe Bool
+forall e. Edge e -&gt; Maybe Bool
+</span><a href="Miso.Flow.Types.html#edgeDeletable"><span class="hs-identifier hs-var">edgeDeletable</span></a></span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177249"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Bool -&gt; Maybe Bool -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Maybe Bool
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-264"></span><span>    </span><span id="local-6989586621679177251"><span class="annot"><span class="annottext">connectedEdges :: [Edge e]
+</span><a href="#local-6989586621679177251"><span class="hs-identifier hs-var hs-var">connectedEdges</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Node n] -&gt; [Edge e] -&gt; [Edge e]
+forall n e. [Node n] -&gt; [Edge e] -&gt; [Edge e]
+</span><a href="Miso.Flow.Utils.Graph.html#getConnectedEdges"><span class="hs-identifier hs-var">getConnectedEdges</span></a></span><span> </span><span class="annot"><span class="annottext">[Node n]
+</span><a href="#local-6989586621679177222"><span class="hs-identifier hs-var">matchingNodes</span></a></span><span> </span><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679177248"><span class="hs-identifier hs-var">deletableEdges</span></a></span><span>
+</span><span id="line-265"></span><span>    </span><span id="local-6989586621679177223"><span class="annot"><span class="annottext">matchingEdges :: [Edge e]
+</span><a href="#local-6989586621679177223"><span class="hs-identifier hs-var hs-var">matchingEdges</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-266"></span><span>      </span><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679177251"><span class="hs-identifier hs-var">connectedEdges</span></a></span><span> </span><span class="annot"><span class="annottext">[Edge e] -&gt; [Edge e] -&gt; [Edge e]
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span>
+</span><span id="line-267"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177256"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621679177256"><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177256"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679177248"><span class="hs-identifier hs-var">deletableEdges</span></a></span><span>
+</span><span id="line-268"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Edge e -&gt; NodeId
+forall e. Edge e -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#edgeId"><span class="hs-identifier hs-var">edgeId</span></a></span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177256"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">NodeId -&gt; Set NodeId -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><span class="hs-operator hs-var">`S.member`</span></span><span> </span><span class="annot"><span class="annottext">Set NodeId
+</span><a href="#local-6989586621679177245"><span class="hs-identifier hs-var">edgeIds</span></a></span><span>
+</span><span id="line-269"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NodeId -&gt; [NodeId] -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">notElem</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Edge e -&gt; NodeId
+forall e. Edge e -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#edgeId"><span class="hs-identifier hs-var">edgeId</span></a></span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177256"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Edge e -&gt; NodeId) -&gt; [Edge e] -&gt; [NodeId]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Edge e -&gt; NodeId
+forall e. Edge e -&gt; NodeId
+</span><a href="Miso.Flow.Types.html#edgeId"><span class="hs-identifier hs-var">edgeId</span></a></span><span> </span><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679177251"><span class="hs-identifier hs-var">connectedEdges</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-270"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-271"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-272"></span></pre></body></html>

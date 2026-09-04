@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- |</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- Module      :  Miso.Flow.Utils.Connections</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- License     :  BSD3-style (see the file LICENSE)</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--</span><span>
+</span><span id="line-8"></span><span class="hs-comment">-- Pure port of @utils\/connections.ts@ from @\@xyflow\/system@.</span><span>
+</span><span id="line-9"></span><span class="hs-comment">----------------------------------------------------------------------------</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Connections.html"><span class="hs-identifier">Miso.Flow.Utils.Connections</span></a></span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Connections.html#areConnectionMapsEqual"><span class="hs-identifier">areConnectionMapsEqual</span></a></span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Connections.html#handleConnectionChange"><span class="hs-identifier">handleConnectionChange</span></a></span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Connections.html#getConnectionStatus"><span class="hs-identifier">getConnectionStatus</span></a></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-15"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Map</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-19"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html"><span class="hs-identifier">Miso.String</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier">MisoString</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Miso.Flow.Types.html"><span class="hs-identifier">Miso.Flow.Types</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-24"></span><span class="annot"><span class="hs-comment">-- | Two connection maps hold the same connection keys.</span></span><span>
+</span><span id="line-25"></span><span class="annot"><a href="Miso.Flow.Utils.Connections.html#areConnectionMapsEqual"><span class="hs-identifier hs-type">areConnectionMapsEqual</span></a></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Map</span></span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#HandleConnection"><span class="hs-identifier hs-type">HandleConnection</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Map</span></span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#HandleConnection"><span class="hs-identifier hs-type">HandleConnection</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-29"></span><span id="areConnectionMapsEqual"><span class="annot"><span class="annottext">areConnectionMapsEqual :: Maybe (Map MisoString HandleConnection)
+-&gt; Maybe (Map MisoString HandleConnection) -&gt; Bool
+</span><a href="Miso.Flow.Utils.Connections.html#areConnectionMapsEqual"><span class="hs-identifier hs-var hs-var">areConnectionMapsEqual</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe (Map MisoString HandleConnection)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Map MisoString HandleConnection)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-30"></span><span class="annot"><a href="Miso.Flow.Utils.Connections.html#areConnectionMapsEqual"><span class="hs-identifier hs-var">areConnectionMapsEqual</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679174402"><span class="annot"><span class="annottext">Map MisoString HandleConnection
+</span><a href="#local-6989586621679174402"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679174403"><span class="annot"><span class="annottext">Map MisoString HandleConnection
+</span><a href="#local-6989586621679174403"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Map MisoString HandleConnection -&gt; Int
+forall k a. Map k a -&gt; Int
+</span><span class="hs-identifier hs-var">M.size</span></span><span> </span><span class="annot"><span class="annottext">Map MisoString HandleConnection
+</span><a href="#local-6989586621679174402"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Map MisoString HandleConnection -&gt; Int
+forall k a. Map k a -&gt; Int
+</span><span class="hs-identifier hs-var">M.size</span></span><span> </span><span class="annot"><span class="annottext">Map MisoString HandleConnection
+</span><a href="#local-6989586621679174403"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Map MisoString HandleConnection -&gt; Bool
+forall k a. Map k a -&gt; Bool
+</span><span class="hs-identifier hs-var">M.null</span></span><span> </span><span class="annot"><span class="annottext">Map MisoString HandleConnection
+</span><a href="#local-6989586621679174402"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Map MisoString HandleConnection -&gt; Bool
+forall k a. Map k a -&gt; Bool
+</span><span class="hs-identifier hs-var">M.null</span></span><span> </span><span class="annot"><span class="annottext">Map MisoString HandleConnection
+</span><a href="#local-6989586621679174403"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MisoString -&gt; Bool) -&gt; [MisoString] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">all</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MisoString -&gt; Map MisoString HandleConnection -&gt; Bool
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Bool
+</span><span class="hs-operator hs-var">`M.member`</span></span><span> </span><span class="annot"><span class="annottext">Map MisoString HandleConnection
+</span><a href="#local-6989586621679174403"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Map MisoString HandleConnection -&gt; [MisoString]
+forall k a. Map k a -&gt; [k]
+</span><span class="hs-identifier hs-var">M.keys</span></span><span> </span><span class="annot"><span class="annottext">Map MisoString HandleConnection
+</span><a href="#local-6989586621679174402"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="annot"><a href="Miso.Flow.Utils.Connections.html#areConnectionMapsEqual"><span class="hs-identifier hs-var">areConnectionMapsEqual</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Map MisoString HandleConnection)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe (Map MisoString HandleConnection)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-35"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- | Connections in @a@ that are not in @b@ (used to fire</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- connect\/disconnect callbacks).</span><span>
+</span><span id="line-38"></span><span class="annot"><a href="Miso.Flow.Utils.Connections.html#handleConnectionChange"><span class="hs-identifier hs-type">handleConnectionChange</span></a></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map</span></span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#HandleConnection"><span class="hs-identifier hs-type">HandleConnection</span></a></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map</span></span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#HandleConnection"><span class="hs-identifier hs-type">HandleConnection</span></a></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#HandleConnection"><span class="hs-identifier hs-type">HandleConnection</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-42"></span><span id="handleConnectionChange"><span class="annot"><span class="annottext">handleConnectionChange :: Map MisoString HandleConnection
+-&gt; Map MisoString HandleConnection -&gt; [HandleConnection]
+</span><a href="Miso.Flow.Utils.Connections.html#handleConnectionChange"><span class="hs-identifier hs-var hs-var">handleConnectionChange</span></a></span></span><span> </span><span id="local-6989586621679174411"><span class="annot"><span class="annottext">Map MisoString HandleConnection
+</span><a href="#local-6989586621679174411"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679174412"><span class="annot"><span class="annottext">Map MisoString HandleConnection
+</span><a href="#local-6989586621679174412"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">HandleConnection
+</span><a href="#local-6989586621679174413"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679174414"><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174414"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679174413"><span class="annot"><span class="annottext">HandleConnection
+</span><a href="#local-6989586621679174413"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Map MisoString HandleConnection -&gt; [(MisoString, HandleConnection)]
+forall k a. Map k a -&gt; [(k, a)]
+</span><span class="hs-identifier hs-var">M.toList</span></span><span> </span><span class="annot"><span class="annottext">Map MisoString HandleConnection
+</span><a href="#local-6989586621679174411"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174414"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; Map MisoString HandleConnection -&gt; Bool
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Bool
+</span><span class="hs-operator hs-var">`M.member`</span></span><span> </span><span class="annot"><span class="annottext">Map MisoString HandleConnection
+</span><a href="#local-6989586621679174412"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-44"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-45"></span><span class="annot"><span class="hs-comment">-- | @\'valid\'@ \/ @\'invalid\'@ status string for an ongoing connection.</span></span><span>
+</span><span id="line-46"></span><span class="annot"><a href="Miso.Flow.Utils.Connections.html#getConnectionStatus"><span class="hs-identifier hs-type">getConnectionStatus</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-47"></span><span id="getConnectionStatus"><span class="annot"><span class="annottext">getConnectionStatus :: Maybe Bool -&gt; Maybe MisoString
+</span><a href="Miso.Flow.Utils.Connections.html#getConnectionStatus"><span class="hs-identifier hs-var hs-var">getConnectionStatus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><span class="annottext">Maybe Bool
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe MisoString
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; Maybe MisoString
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;valid&quot;</span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; Maybe MisoString
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;invalid&quot;</span></span><span>
+</span><span id="line-51"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-52"></span></pre></body></html>

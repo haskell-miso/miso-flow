@@ -1,0 +1,412 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- |</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- Module      :  Miso.Flow.Constants</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- License     :  BSD3-style (see the file LICENSE)</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--</span><span>
+</span><span id="line-8"></span><span class="hs-comment">-- Port of @constants.ts@ from @\@xyflow\/system@.</span><span>
+</span><span id="line-9"></span><span class="hs-comment">----------------------------------------------------------------------------</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html"><span class="hs-identifier">Miso.Flow.Constants</span></a></span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Error messages</span></span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Miso.Flow.Constants.html#errorMessage"><span class="hs-identifier">errorMessage</span></a></span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error001"><span class="hs-identifier">error001</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error002"><span class="hs-identifier">error002</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error003"><span class="hs-identifier">error003</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error004"><span class="hs-identifier">error004</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error005"><span class="hs-identifier">error005</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error006"><span class="hs-identifier">error006</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error007"><span class="hs-identifier">error007</span></a></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error008"><span class="hs-identifier">error008</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error009"><span class="hs-identifier">error009</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error010"><span class="hs-identifier">error010</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error011"><span class="hs-identifier">error011</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error012"><span class="hs-identifier">error012</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error013"><span class="hs-identifier">error013</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error014"><span class="hs-identifier">error014</span></a></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error015"><span class="hs-identifier">error015</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#error016"><span class="hs-identifier">error016</span></a></span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Extents</span></span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#infiniteExtent"><span class="hs-identifier">infiniteExtent</span></a></span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Keys</span></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#elementSelectionKeys"><span class="hs-identifier">elementSelectionKeys</span></a></span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Aria labels</span></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#AriaLabelConfig"><span class="hs-identifier">AriaLabelConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#defaultAriaLabelConfig"><span class="hs-identifier">defaultAriaLabelConfig</span></a></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#mergeAriaLabelConfig"><span class="hs-identifier">mergeAriaLabelConfig</span></a></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-25"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-27"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html"><span class="hs-identifier">Miso.String</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier">MisoString</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#ms"><span class="hs-identifier">ms</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Miso.Flow.Types.html"><span class="hs-identifier">Miso.Flow.Types</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- | Look up an error message renderer by its code. The context argument</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- (an id, node type, etc.) is interpolated where the original message</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- takes a parameter and ignored otherwise.</span><span>
+</span><span id="line-35"></span><span class="annot"><a href="Miso.Flow.Constants.html#errorMessage"><span class="hs-identifier hs-type">errorMessage</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#ErrorCode"><span class="hs-identifier hs-type">ErrorCode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-36"></span><span id="errorMessage"><span class="annot"><span class="annottext">errorMessage :: MisoString -&gt; MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#errorMessage"><span class="hs-identifier hs-var hs-var">errorMessage</span></a></span></span><span> </span><span id="local-6989586621679174089"><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174089"><span class="hs-identifier hs-var">code</span></a></span></span><span> </span><span id="local-6989586621679174090"><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174090"><span class="hs-identifier hs-var">arg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174089"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;001&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Constants.html#error001"><span class="hs-identifier hs-var">error001</span></a></span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;002&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Constants.html#error002"><span class="hs-identifier hs-var">error002</span></a></span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;003&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#error003"><span class="hs-identifier hs-var">error003</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174090"><span class="hs-identifier hs-var">arg</span></a></span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;004&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Constants.html#error004"><span class="hs-identifier hs-var">error004</span></a></span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;005&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Constants.html#error005"><span class="hs-identifier hs-var">error005</span></a></span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;006&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Constants.html#error006"><span class="hs-identifier hs-var">error006</span></a></span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;007&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#error007"><span class="hs-identifier hs-var">error007</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174090"><span class="hs-identifier hs-var">arg</span></a></span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;009&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#error009"><span class="hs-identifier hs-var">error009</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174090"><span class="hs-identifier hs-var">arg</span></a></span><span>
+</span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;010&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Constants.html#error010"><span class="hs-identifier hs-var">error010</span></a></span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;011&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#error011"><span class="hs-identifier hs-var">error011</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174090"><span class="hs-identifier hs-var">arg</span></a></span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;012&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#error012"><span class="hs-identifier hs-var">error012</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174090"><span class="hs-identifier hs-var">arg</span></a></span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;013&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Constants.html#error013"><span class="hs-identifier hs-var">error013</span></a></span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;014&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Constants.html#error014"><span class="hs-identifier hs-var">error014</span></a></span><span>
+</span><span id="line-51"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;015&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Constants.html#error015"><span class="hs-identifier hs-var">error015</span></a></span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;016&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#error016"><span class="hs-identifier hs-var">error016</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174090"><span class="hs-identifier hs-var">arg</span></a></span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-identifier">_</span></span><span>     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Unknown error code: &quot;</span></span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; MisoString -&gt; MisoString
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174089"><span class="hs-identifier hs-var">code</span></a></span><span>
+</span><span id="line-54"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-55"></span><span class="annot"><a href="Miso.Flow.Constants.html#error001"><span class="hs-identifier hs-type">error001</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-56"></span><span id="error001"><span class="annot"><span class="annottext">error001 :: MisoString
+</span><a href="Miso.Flow.Constants.html#error001"><span class="hs-identifier hs-var hs-var">error001</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Seems like you have not used a FlowProvider as an ancestor.&quot;</span></span><span>
+</span><span id="line-57"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-58"></span><span class="annot"><a href="Miso.Flow.Constants.html#error002"><span class="hs-identifier hs-type">error002</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-59"></span><span id="error002"><span class="annot"><span class="annottext">error002 :: MisoString
+</span><a href="Miso.Flow.Constants.html#error002"><span class="hs-identifier hs-var hs-var">error002</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;It looks like you've created a new nodeTypes or edgeTypes object. &quot;</span></span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;If this wasn't on purpose please define the nodeTypes/edgeTypes &quot;</span></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;outside of the component or memoize them.&quot;</span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-64"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-65"></span><span class="annot"><a href="Miso.Flow.Constants.html#error003"><span class="hs-identifier hs-type">error003</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-66"></span><span id="error003"><span class="annot"><span class="annottext">error003 :: MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#error003"><span class="hs-identifier hs-var hs-var">error003</span></a></span></span><span> </span><span id="local-6989586621679174091"><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174091"><span class="hs-identifier hs-var">nodeType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Node type \&quot;&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174091"><span class="hs-identifier hs-var">nodeType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\&quot; not found. Using fallback type \&quot;default\&quot;.&quot;</span></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-68"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-69"></span><span class="annot"><a href="Miso.Flow.Constants.html#error004"><span class="hs-identifier hs-type">error004</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-70"></span><span id="error004"><span class="annot"><span class="annottext">error004 :: MisoString
+</span><a href="Miso.Flow.Constants.html#error004"><span class="hs-identifier hs-var hs-var">error004</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;The parent container needs a width and a height to render the graph.&quot;</span></span><span>
+</span><span id="line-71"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-72"></span><span class="annot"><a href="Miso.Flow.Constants.html#error005"><span class="hs-identifier hs-type">error005</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-73"></span><span id="error005"><span class="annot"><span class="annottext">error005 :: MisoString
+</span><a href="Miso.Flow.Constants.html#error005"><span class="hs-identifier hs-var hs-var">error005</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Only child nodes can use a parent extent.&quot;</span></span><span>
+</span><span id="line-74"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-75"></span><span class="annot"><a href="Miso.Flow.Constants.html#error006"><span class="hs-identifier hs-type">error006</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-76"></span><span id="error006"><span class="annot"><span class="annottext">error006 :: MisoString
+</span><a href="Miso.Flow.Constants.html#error006"><span class="hs-identifier hs-var hs-var">error006</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Can't create edge. An edge needs a source and a target.&quot;</span></span><span>
+</span><span id="line-77"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-78"></span><span class="annot"><a href="Miso.Flow.Constants.html#error007"><span class="hs-identifier hs-type">error007</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-79"></span><span id="error007"><span class="annot"><span class="annottext">error007 :: MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#error007"><span class="hs-identifier hs-var hs-var">error007</span></a></span></span><span> </span><span id="local-6989586621679174092"><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174092"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;The old edge with id=&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174092"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot; does not exist.&quot;</span></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-80"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-81"></span><span class="annot"><span class="hs-comment">-- | Takes the failing 'HandleType', the handle id (if any) and the edge id.</span></span><span>
+</span><span id="line-82"></span><span class="annot"><a href="Miso.Flow.Constants.html#error008"><span class="hs-identifier hs-type">error008</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#HandleType"><span class="hs-identifier hs-type">HandleType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#EdgeId"><span class="hs-identifier hs-type">EdgeId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-83"></span><span id="error008"><span class="annot"><span class="annottext">error008 :: HandleType -&gt; Maybe MisoString -&gt; MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#error008"><span class="hs-identifier hs-var hs-var">error008</span></a></span></span><span> </span><span id="local-6989586621679174094"><span class="annot"><span class="annottext">HandleType
+</span><a href="#local-6989586621679174094"><span class="hs-identifier hs-var">handleType</span></a></span></span><span> </span><span id="local-6989586621679174095"><span class="annot"><span class="annottext">Maybe MisoString
+</span><a href="#local-6989586621679174095"><span class="hs-identifier hs-var">handleId</span></a></span></span><span> </span><span id="local-6989586621679174096"><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174096"><span class="hs-identifier hs-var">edgeId'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Couldn't create edge for &quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HandleType -&gt; MisoString
+</span><a href="Miso.Flow.Types.html#handleTypeToText"><span class="hs-identifier hs-var">handleTypeToText</span></a></span><span> </span><span class="annot"><span class="annottext">HandleType
+</span><a href="#local-6989586621679174094"><span class="hs-identifier hs-var">handleType</span></a></span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot; handle id: \&quot;&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+-&gt; (MisoString -&gt; MisoString) -&gt; Maybe MisoString -&gt; MisoString
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;null&quot;</span></span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; MisoString
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Maybe MisoString
+</span><a href="#local-6989586621679174095"><span class="hs-identifier hs-var">handleId</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\&quot;, edge id: &quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174096"><span class="hs-identifier hs-var">edgeId'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;.&quot;</span></span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-88"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-89"></span><span class="annot"><a href="Miso.Flow.Constants.html#error009"><span class="hs-identifier hs-type">error009</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-90"></span><span id="error009"><span class="annot"><span class="annottext">error009 :: MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#error009"><span class="hs-identifier hs-var hs-var">error009</span></a></span></span><span> </span><span id="local-6989586621679174100"><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174100"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Marker type \&quot;&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174100"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\&quot; doesn't exist.&quot;</span></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-91"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-92"></span><span class="annot"><a href="Miso.Flow.Constants.html#error010"><span class="hs-identifier hs-type">error010</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-93"></span><span id="error010"><span class="annot"><span class="annottext">error010 :: MisoString
+</span><a href="Miso.Flow.Constants.html#error010"><span class="hs-identifier hs-var hs-var">error010</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-94"></span><span>  </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Handle: No node id found. Make sure to only use a Handle inside a custom Node.&quot;</span></span><span>
+</span><span id="line-95"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-96"></span><span class="annot"><a href="Miso.Flow.Constants.html#error011"><span class="hs-identifier hs-type">error011</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-97"></span><span id="error011"><span class="annot"><span class="annottext">error011 :: MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#error011"><span class="hs-identifier hs-var hs-var">error011</span></a></span></span><span> </span><span id="local-6989586621679174101"><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174101"><span class="hs-identifier hs-var">edgeType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Edge type \&quot;&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174101"><span class="hs-identifier hs-var">edgeType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\&quot; not found. Using fallback type \&quot;default\&quot;.&quot;</span></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-99"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-100"></span><span class="annot"><a href="Miso.Flow.Constants.html#error012"><span class="hs-identifier hs-type">error012</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-101"></span><span id="error012"><span class="annot"><span class="annottext">error012 :: MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#error012"><span class="hs-identifier hs-var hs-var">error012</span></a></span></span><span> </span><span id="local-6989586621679174102"><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174102"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-102"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Node with id \&quot;&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174102"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\&quot; does not exist, it may have been removed. &quot;</span></span><span>
+</span><span id="line-103"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;This can happen when a node is deleted before the \&quot;onNodeClick\&quot; &quot;</span></span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;handler is called.&quot;</span></span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-106"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-107"></span><span class="annot"><a href="Miso.Flow.Constants.html#error013"><span class="hs-identifier hs-type">error013</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-108"></span><span id="error013"><span class="annot"><span class="annottext">error013 :: MisoString
+</span><a href="Miso.Flow.Constants.html#error013"><span class="hs-identifier hs-var hs-var">error013</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;It seems that you haven't loaded the miso-flow styles.&quot;</span></span><span>
+</span><span id="line-109"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-110"></span><span class="annot"><a href="Miso.Flow.Constants.html#error014"><span class="hs-identifier hs-type">error014</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-111"></span><span id="error014"><span class="annot"><span class="annottext">error014 :: MisoString
+</span><a href="Miso.Flow.Constants.html#error014"><span class="hs-identifier hs-var hs-var">error014</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-112"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;useNodeConnections: No node ID found. Call useNodeConnections inside &quot;</span></span><span>
+</span><span id="line-113"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;a custom Node or provide a node ID.&quot;</span></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-114"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-115"></span><span class="annot"><a href="Miso.Flow.Constants.html#error015"><span class="hs-identifier hs-type">error015</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-116"></span><span id="error015"><span class="annot"><span class="annottext">error015 :: MisoString
+</span><a href="Miso.Flow.Constants.html#error015"><span class="hs-identifier hs-var hs-var">error015</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-117"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;It seems that you are trying to drag a node that is not initialized. &quot;</span></span><span>
+</span><span id="line-118"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Please use onNodesChange as explained in the docs.&quot;</span></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-119"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-120"></span><span class="annot"><a href="Miso.Flow.Constants.html#error016"><span class="hs-identifier hs-type">error016</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-121"></span><span id="error016"><span class="annot"><span class="annottext">error016 :: MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#error016"><span class="hs-identifier hs-var hs-var">error016</span></a></span></span><span> </span><span id="local-6989586621679174103"><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174103"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Edge with id \&quot;&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174103"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\&quot; does not exist, it may have been removed. &quot;</span></span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;This can happen when an edge is deleted before the \&quot;onEdgeClick\&quot; &quot;</span></span><span>
+</span><span id="line-124"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;handler is called.&quot;</span></span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-126"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-127"></span><span class="annot"><span class="hs-comment">-- | The unbounded 'CoordinateExtent'.</span></span><span>
+</span><span id="line-128"></span><span class="annot"><a href="Miso.Flow.Constants.html#infiniteExtent"><span class="hs-identifier hs-type">infiniteExtent</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#CoordinateExtent"><span class="hs-identifier hs-type">CoordinateExtent</span></a></span><span>
+</span><span id="line-129"></span><span id="infiniteExtent"><span class="annot"><span class="annottext">infiniteExtent :: CoordinateExtent
+</span><a href="Miso.Flow.Constants.html#infiniteExtent"><span class="hs-identifier hs-var hs-var">infiniteExtent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double -&gt; Double -&gt; CoordinateExtent
+</span><a href="Miso.Flow.Types.html#CoordinateExtent"><span class="hs-identifier hs-var">CoordinateExtent</span></a></span><span>
+</span><span id="line-130"></span><span>  </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">1</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Fractional a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">/</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">1</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Fractional a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">/</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">1</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Fractional a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">/</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">1</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Double
+forall a. Fractional a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">/</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span class="hs-special">)</span><span>
+</span><span id="line-131"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-132"></span><span class="annot"><a href="Miso.Flow.Constants.html#elementSelectionKeys"><span class="hs-identifier hs-type">elementSelectionKeys</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-133"></span><span id="elementSelectionKeys"><span class="annot"><span class="annottext">elementSelectionKeys :: [MisoString]
+</span><a href="Miso.Flow.Constants.html#elementSelectionKeys"><span class="hs-identifier hs-var hs-var">elementSelectionKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Enter&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot; &quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Escape&quot;</span></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-134"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- | Port of @defaultAriaLabelConfig@. The two message functions are</span><span>
+</span><span id="line-136"></span><span class="hs-comment">-- proper Haskell functions.</span><span>
+</span><span id="line-137"></span><span class="hs-keyword">data</span><span> </span><span id="AriaLabelConfig"><span class="annot"><a href="Miso.Flow.Constants.html#AriaLabelConfig"><span class="hs-identifier hs-var">AriaLabelConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AriaLabelConfig"><span class="annot"><a href="Miso.Flow.Constants.html#AriaLabelConfig"><span class="hs-identifier hs-var">AriaLabelConfig</span></a></span></span><span>
+</span><span id="line-138"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ariaNodeDescriptionDefault"><span class="annot"><span class="annottext">AriaLabelConfig -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#ariaNodeDescriptionDefault"><span class="hs-identifier hs-var hs-var">ariaNodeDescriptionDefault</span></a></span></span><span>          </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-139"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ariaNodeDescriptionKeyboardDisabled"><span class="annot"><span class="annottext">AriaLabelConfig -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#ariaNodeDescriptionKeyboardDisabled"><span class="hs-identifier hs-var hs-var">ariaNodeDescriptionKeyboardDisabled</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-140"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ariaNodeLiveMessage"><span class="annot"><span class="annottext">AriaLabelConfig -&gt; MisoString -&gt; Double -&gt; Double -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#ariaNodeLiveMessage"><span class="hs-identifier hs-var hs-var">ariaNodeLiveMessage</span></a></span></span><span>                 </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-141"></span><span>    </span><span class="annot"><span class="hs-comment">-- ^ direction, x, y</span></span><span>
+</span><span id="line-142"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ariaEdgeDescriptionDefault"><span class="annot"><span class="annottext">AriaLabelConfig -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#ariaEdgeDescriptionDefault"><span class="hs-identifier hs-var hs-var">ariaEdgeDescriptionDefault</span></a></span></span><span>          </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-143"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ariaControlsLabel"><span class="annot"><span class="annottext">AriaLabelConfig -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#ariaControlsLabel"><span class="hs-identifier hs-var hs-var">ariaControlsLabel</span></a></span></span><span>                   </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-144"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ariaControlsZoomInLabel"><span class="annot"><span class="annottext">AriaLabelConfig -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#ariaControlsZoomInLabel"><span class="hs-identifier hs-var hs-var">ariaControlsZoomInLabel</span></a></span></span><span>             </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ariaControlsZoomOutLabel"><span class="annot"><span class="annottext">AriaLabelConfig -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#ariaControlsZoomOutLabel"><span class="hs-identifier hs-var hs-var">ariaControlsZoomOutLabel</span></a></span></span><span>            </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-146"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ariaControlsFitViewLabel"><span class="annot"><span class="annottext">AriaLabelConfig -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#ariaControlsFitViewLabel"><span class="hs-identifier hs-var hs-var">ariaControlsFitViewLabel</span></a></span></span><span>            </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-147"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ariaControlsInteractiveLabel"><span class="annot"><span class="annottext">AriaLabelConfig -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#ariaControlsInteractiveLabel"><span class="hs-identifier hs-var hs-var">ariaControlsInteractiveLabel</span></a></span></span><span>        </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-148"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ariaMinimapLabel"><span class="annot"><span class="annottext">AriaLabelConfig -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#ariaMinimapLabel"><span class="hs-identifier hs-var hs-var">ariaMinimapLabel</span></a></span></span><span>                    </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-149"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ariaHandleLabel"><span class="annot"><span class="annottext">AriaLabelConfig -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#ariaHandleLabel"><span class="hs-identifier hs-var hs-var">ariaHandleLabel</span></a></span></span><span>                     </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-150"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-151"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-152"></span><span class="annot"><a href="Miso.Flow.Constants.html#defaultAriaLabelConfig"><span class="hs-identifier hs-type">defaultAriaLabelConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#AriaLabelConfig"><span class="hs-identifier hs-type">AriaLabelConfig</span></a></span><span>
+</span><span id="line-153"></span><span id="defaultAriaLabelConfig"><span class="annot"><span class="annottext">defaultAriaLabelConfig :: AriaLabelConfig
+</span><a href="Miso.Flow.Constants.html#defaultAriaLabelConfig"><span class="hs-identifier hs-var hs-var">defaultAriaLabelConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#AriaLabelConfig"><span class="hs-identifier hs-type">AriaLabelConfig</span></a></span><span>
+</span><span id="line-154"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">ariaNodeDescriptionDefault :: MisoString
+</span><a href="Miso.Flow.Constants.html#ariaNodeDescriptionDefault"><span class="hs-identifier hs-var">ariaNodeDescriptionDefault</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-155"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Press enter or space to select a node. &quot;</span></span><span>
+</span><span id="line-156"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Press delete to remove it and escape to cancel.&quot;</span></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-157"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ariaNodeDescriptionKeyboardDisabled :: MisoString
+</span><a href="Miso.Flow.Constants.html#ariaNodeDescriptionKeyboardDisabled"><span class="hs-identifier hs-var">ariaNodeDescriptionKeyboardDisabled</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-158"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Press enter or space to select a node. &quot;</span></span><span>
+</span><span id="line-159"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;You can then use the arrow keys to move the node around. &quot;</span></span><span>
+</span><span id="line-160"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Press delete to remove it and escape to cancel.&quot;</span></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-161"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ariaNodeLiveMessage :: MisoString -&gt; Double -&gt; Double -&gt; MisoString
+</span><a href="Miso.Flow.Constants.html#ariaNodeLiveMessage"><span class="hs-identifier hs-var">ariaNodeLiveMessage</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679174118"><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174118"><span class="hs-identifier hs-var">direction</span></a></span></span><span> </span><span id="local-6989586621679174119"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679174119"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679174120"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679174120"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-162"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Moved selected node &quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679174118"><span class="hs-identifier hs-var">direction</span></a></span><span>
+</span><span id="line-163"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;. New position, x: &quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; MisoString
+forall str. ToMisoString str =&gt; str -&gt; MisoString
+</span><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#ms"><span class="hs-identifier hs-var">ms</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Int
+forall b. Integral b =&gt; Double -&gt; b
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">round</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679174119"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
+</span><span id="line-164"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;, y: &quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; MisoString
+forall str. ToMisoString str =&gt; str -&gt; MisoString
+</span><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#ms"><span class="hs-identifier hs-var">ms</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Int
+forall b. Integral b =&gt; Double -&gt; b
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">round</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679174120"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-165"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ariaEdgeDescriptionDefault :: MisoString
+</span><a href="Miso.Flow.Constants.html#ariaEdgeDescriptionDefault"><span class="hs-identifier hs-var">ariaEdgeDescriptionDefault</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-166"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Press enter or space to select an edge. &quot;</span></span><span>
+</span><span id="line-167"></span><span>      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;You can then press delete to remove it or escape to cancel.&quot;</span></span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-168"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ariaControlsLabel :: MisoString
+</span><a href="Miso.Flow.Constants.html#ariaControlsLabel"><span class="hs-identifier hs-var">ariaControlsLabel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Control Panel&quot;</span></span><span>
+</span><span id="line-169"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ariaControlsZoomInLabel :: MisoString
+</span><a href="Miso.Flow.Constants.html#ariaControlsZoomInLabel"><span class="hs-identifier hs-var">ariaControlsZoomInLabel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Zoom In&quot;</span></span><span>
+</span><span id="line-170"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ariaControlsZoomOutLabel :: MisoString
+</span><a href="Miso.Flow.Constants.html#ariaControlsZoomOutLabel"><span class="hs-identifier hs-var">ariaControlsZoomOutLabel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Zoom Out&quot;</span></span><span>
+</span><span id="line-171"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ariaControlsFitViewLabel :: MisoString
+</span><a href="Miso.Flow.Constants.html#ariaControlsFitViewLabel"><span class="hs-identifier hs-var">ariaControlsFitViewLabel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Fit View&quot;</span></span><span>
+</span><span id="line-172"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ariaControlsInteractiveLabel :: MisoString
+</span><a href="Miso.Flow.Constants.html#ariaControlsInteractiveLabel"><span class="hs-identifier hs-var">ariaControlsInteractiveLabel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Toggle Interactivity&quot;</span></span><span>
+</span><span id="line-173"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ariaMinimapLabel :: MisoString
+</span><a href="Miso.Flow.Constants.html#ariaMinimapLabel"><span class="hs-identifier hs-var">ariaMinimapLabel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Mini Map&quot;</span></span><span>
+</span><span id="line-174"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ariaHandleLabel :: MisoString
+</span><a href="Miso.Flow.Constants.html#ariaHandleLabel"><span class="hs-identifier hs-var">ariaHandleLabel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;Handle&quot;</span></span><span>
+</span><span id="line-175"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-176"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-177"></span><span class="annot"><span class="hs-comment">-- | Port of @mergeAriaLabelConfig@: apply overrides to the defaults.</span></span><span>
+</span><span id="line-178"></span><span class="annot"><a href="Miso.Flow.Constants.html#mergeAriaLabelConfig"><span class="hs-identifier hs-type">mergeAriaLabelConfig</span></a></span><span>
+</span><span id="line-179"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Constants.html#AriaLabelConfig"><span class="hs-identifier hs-type">AriaLabelConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#AriaLabelConfig"><span class="hs-identifier hs-type">AriaLabelConfig</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-180"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Miso.Flow.Constants.html#AriaLabelConfig"><span class="hs-identifier hs-type">AriaLabelConfig</span></a></span><span>
+</span><span id="line-181"></span><span id="mergeAriaLabelConfig"><span class="annot"><span class="annottext">mergeAriaLabelConfig :: (AriaLabelConfig -&gt; AriaLabelConfig) -&gt; AriaLabelConfig
+</span><a href="Miso.Flow.Constants.html#mergeAriaLabelConfig"><span class="hs-identifier hs-var hs-var">mergeAriaLabelConfig</span></a></span></span><span> </span><span id="local-6989586621679174122"><span class="annot"><span class="annottext">AriaLabelConfig -&gt; AriaLabelConfig
+</span><a href="#local-6989586621679174122"><span class="hs-identifier hs-var">override</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AriaLabelConfig -&gt; AriaLabelConfig
+</span><a href="#local-6989586621679174122"><span class="hs-identifier hs-var">override</span></a></span><span> </span><span class="annot"><span class="annottext">AriaLabelConfig
+</span><a href="Miso.Flow.Constants.html#defaultAriaLabelConfig"><span class="hs-identifier hs-var">defaultAriaLabelConfig</span></a></span><span>
+</span><span id="line-182"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-183"></span></pre></body></html>

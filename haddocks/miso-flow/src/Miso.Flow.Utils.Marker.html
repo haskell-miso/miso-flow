@@ -1,0 +1,299 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE RecordWildCards   #-}</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- |</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- Module      :  Miso.Flow.Utils.Marker</span><span>
+</span><span id="line-7"></span><span class="hs-comment">-- License     :  BSD3-style (see the file LICENSE)</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Pure port of @utils\/marker.ts@ from @\@xyflow\/system@.</span><span>
+</span><span id="line-10"></span><span class="hs-comment">----------------------------------------------------------------------------</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Marker.html"><span class="hs-identifier">Miso.Flow.Utils.Marker</span></a></span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Marker.html#getMarkerId"><span class="hs-identifier">getMarkerId</span></a></span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Utils.Marker.html#createMarkerIds"><span class="hs-identifier">createMarkerIds</span></a></span><span>
+</span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-15"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">sortBy</span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">mapMaybe</span></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Ord</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">comparing</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">S</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-21"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html"><span class="hs-identifier">Miso.String</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier">MisoString</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">intercalate</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Miso.Flow.Internal.JSNum.html"><span class="hs-identifier">Miso.Flow.Internal.JSNum</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Internal.JSNum.html#jsShow"><span class="hs-identifier">jsShow</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Miso.Flow.Types.html"><span class="hs-identifier">Miso.Flow.Types</span></a></span><span>
+</span><span id="line-26"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- | Stable id for a marker; port of @getMarkerId@. Inline markers are</span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- keyed by their sorted @key=value@ fields (matching the TS object-key</span><span>
+</span><span id="line-29"></span><span class="hs-comment">-- serialization), marker references use their name directly.</span><span>
+</span><span id="line-30"></span><span class="annot"><a href="Miso.Flow.Utils.Marker.html#getMarkerId"><span class="hs-identifier hs-type">getMarkerId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#EdgeMarkerType"><span class="hs-identifier hs-type">EdgeMarkerType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-31"></span><span id="getMarkerId"><span class="annot"><span class="annottext">getMarkerId :: Maybe EdgeMarkerType -&gt; Maybe MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Utils.Marker.html#getMarkerId"><span class="hs-identifier hs-var hs-var">getMarkerId</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe EdgeMarkerType
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe MisoString
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-32"></span><span class="annot"><a href="Miso.Flow.Utils.Marker.html#getMarkerId"><span class="hs-identifier hs-var">getMarkerId</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Types.html#MarkerRef"><span class="hs-identifier hs-type">MarkerRef</span></a></span><span> </span><span id="local-6989586621679177386"><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679177386"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe MisoString
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679177386"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><span id="line-33"></span><span class="annot"><a href="Miso.Flow.Utils.Marker.html#getMarkerId"><span class="hs-identifier hs-var">getMarkerId</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Types.html#Marker"><span class="hs-identifier hs-type">Marker</span></a></span><span> </span><span id="local-6989586621679177388"><span class="annot"><span class="annottext">EdgeMarker
+</span><a href="#local-6989586621679177388"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span id="local-6989586621679177389"><span class="annot"><span class="annottext">Maybe MisoString
+</span><a href="#local-6989586621679177389"><span class="hs-identifier hs-var">flowId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><span class="annottext">MisoString
+-&gt; (MisoString -&gt; MisoString) -&gt; Maybe MisoString -&gt; MisoString
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MisoString -&gt; MisoString -&gt; MisoString
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;__&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe MisoString
+</span><a href="#local-6989586621679177389"><span class="hs-identifier hs-var">flowId</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; MisoString -&gt; MisoString
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; [MisoString] -&gt; MisoString
+</span><span class="hs-identifier hs-var">intercalate</span></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;&amp;&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">EdgeMarker -&gt; [MisoString]
+</span><a href="Miso.Flow.Utils.Marker.html#markerFields"><span class="hs-identifier hs-var">markerFields</span></a></span><span> </span><span class="annot"><span class="annottext">EdgeMarker
+</span><a href="#local-6989586621679177388"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- | The marker's present fields as @key=value@ pairs in (TS</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- @Object.keys(marker).sort()@) alphabetical key order.</span><span>
+</span><span id="line-38"></span><span class="annot"><a href="Miso.Flow.Utils.Marker.html#markerFields"><span class="hs-identifier hs-type">markerFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#EdgeMarker"><span class="hs-identifier hs-type">EdgeMarker</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-39"></span><span id="markerFields"><span class="annot"><span class="annottext">markerFields :: EdgeMarker -&gt; [MisoString]
+</span><a href="Miso.Flow.Utils.Marker.html#markerFields"><span class="hs-identifier hs-var hs-var">markerFields</span></a></span></span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#EdgeMarker"><span class="hs-identifier hs-type">EdgeMarker</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621679177393"><span id="local-6989586621679177394"><span id="local-6989586621679177395"><span id="local-6989586621679177396"><span id="local-6989586621679177397"><span id="local-6989586621679177398"><span id="local-6989586621679177399"><span class="annot"><span class="annottext">Maybe Double
+Maybe MisoString
+MarkerType
+markerType :: MarkerType
+markerColor :: Maybe MisoString
+markerWidth :: Maybe Double
+markerHeight :: Maybe Double
+markerUnits :: Maybe MisoString
+markerOrient :: Maybe MisoString
+markerStrokeWidth :: Maybe Double
+markerColor :: EdgeMarker -&gt; Maybe MisoString
+markerHeight :: EdgeMarker -&gt; Maybe Double
+markerOrient :: EdgeMarker -&gt; Maybe MisoString
+markerStrokeWidth :: EdgeMarker -&gt; Maybe Double
+markerType :: EdgeMarker -&gt; MarkerType
+markerUnits :: EdgeMarker -&gt; Maybe MisoString
+markerWidth :: EdgeMarker -&gt; Maybe Double
+</span><a href="#local-6989586621679177393"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><span class="annottext">((MisoString, Maybe MisoString) -&gt; Maybe MisoString)
+-&gt; [(MisoString, Maybe MisoString)] -&gt; [MisoString]
+forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="annot"><span class="annottext">(MisoString, Maybe MisoString) -&gt; Maybe MisoString
+forall {a}. (Semigroup a, IsString a) =&gt; (a, Maybe a) -&gt; Maybe a
+</span><a href="#local-6989586621679177407"><span class="hs-identifier hs-var">render</span></a></span><span>
+</span><span id="line-41"></span><span>    </span><span class="hs-comment">-- alphabetical: color, height, markerUnits, orient, strokeWidth, type, width</span><span>
+</span><span id="line-42"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;color&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe MisoString
+</span><a href="#local-6989586621679177394"><span class="hs-identifier hs-var">markerColor</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;height&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Double -&gt; MisoString
+</span><a href="Miso.Flow.Internal.JSNum.html#jsShow"><span class="hs-identifier hs-var">jsShow</span></a></span><span> </span><span class="annot"><span class="annottext">(Double -&gt; MisoString) -&gt; Maybe Double -&gt; Maybe MisoString
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Double
+</span><a href="#local-6989586621679177396"><span class="hs-identifier hs-var">markerHeight</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;markerUnits&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe MisoString
+</span><a href="#local-6989586621679177397"><span class="hs-identifier hs-var">markerUnits</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;orient&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe MisoString
+</span><a href="#local-6989586621679177398"><span class="hs-identifier hs-var">markerOrient</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;strokeWidth&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Double -&gt; MisoString
+</span><a href="Miso.Flow.Internal.JSNum.html#jsShow"><span class="hs-identifier hs-var">jsShow</span></a></span><span> </span><span class="annot"><span class="annottext">(Double -&gt; MisoString) -&gt; Maybe Double -&gt; Maybe MisoString
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Double
+</span><a href="#local-6989586621679177399"><span class="hs-identifier hs-var">markerStrokeWidth</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;type&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; Maybe MisoString
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MarkerType -&gt; MisoString
+</span><a href="Miso.Flow.Types.html#markerTypeToText"><span class="hs-identifier hs-var">markerTypeToText</span></a></span><span> </span><span class="annot"><span class="annottext">MarkerType
+</span><a href="#local-6989586621679177393"><span class="hs-identifier hs-var">markerType</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;width&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Double -&gt; MisoString
+</span><a href="Miso.Flow.Internal.JSNum.html#jsShow"><span class="hs-identifier hs-var">jsShow</span></a></span><span> </span><span class="annot"><span class="annottext">(Double -&gt; MisoString) -&gt; Maybe Double -&gt; Maybe MisoString
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Double
+</span><a href="#local-6989586621679177395"><span class="hs-identifier hs-var">markerWidth</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>    </span><span class="hs-special">]</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-51"></span><span>    </span><span id="local-6989586621679177407"><span class="annot"><span class="annottext">render :: (a, Maybe a) -&gt; Maybe a
+</span><a href="#local-6989586621679177407"><span class="hs-identifier hs-var hs-var">render</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe a
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><a href="#local-6989586621679177407"><span class="hs-identifier hs-var">render</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679177415"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679177415"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679177416"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679177416"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679177415"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-string">&quot;=&quot;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679177416"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- | All distinct inline markers used by the given edges, with their ids;</span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- port of @createMarkerIds@.</span><span>
+</span><span id="line-56"></span><span id="local-6989586621679177338"><span class="annot"><a href="Miso.Flow.Utils.Marker.html#createMarkerIds"><span class="hs-identifier hs-type">createMarkerIds</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#Edge"><span class="hs-identifier hs-type">Edge</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679177338"><span class="hs-identifier hs-type">e</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ flow id</span></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ default color</span></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#EdgeMarkerType"><span class="hs-identifier hs-type">EdgeMarkerType</span></a></span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ default marker start</span></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#EdgeMarkerType"><span class="hs-identifier hs-type">EdgeMarkerType</span></a></span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><span class="hs-comment">-- ^ default marker end</span></span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Miso.Flow.Types.html#MarkerProps"><span class="hs-identifier hs-type">MarkerProps</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-67"></span><span id="createMarkerIds"><span class="annot"><span class="annottext">createMarkerIds :: forall e.
+[Edge e]
+-&gt; Maybe MisoString
+-&gt; Maybe MisoString
+-&gt; Maybe EdgeMarkerType
+-&gt; Maybe EdgeMarkerType
+-&gt; [MarkerProps]
+</span><a href="Miso.Flow.Utils.Marker.html#createMarkerIds"><span class="hs-identifier hs-var hs-var">createMarkerIds</span></a></span></span><span> </span><span id="local-6989586621679177419"><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679177419"><span class="hs-identifier hs-var">edges</span></a></span></span><span> </span><span id="local-6989586621679177420"><span class="annot"><span class="annottext">Maybe MisoString
+</span><a href="#local-6989586621679177420"><span class="hs-identifier hs-var">flowId</span></a></span></span><span> </span><span id="local-6989586621679177421"><span class="annot"><span class="annottext">Maybe MisoString
+</span><a href="#local-6989586621679177421"><span class="hs-identifier hs-var">defaultColor</span></a></span></span><span> </span><span id="local-6989586621679177422"><span class="annot"><span class="annottext">Maybe EdgeMarkerType
+</span><a href="#local-6989586621679177422"><span class="hs-identifier hs-var">defaultMarkerStart</span></a></span></span><span> </span><span id="local-6989586621679177423"><span class="annot"><span class="annottext">Maybe EdgeMarkerType
+</span><a href="#local-6989586621679177423"><span class="hs-identifier hs-var">defaultMarkerEnd</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><span class="annottext">(MarkerProps -&gt; MarkerProps -&gt; Ordering)
+-&gt; [MarkerProps] -&gt; [MarkerProps]
+forall a. (a -&gt; a -&gt; Ordering) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">sortBy</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(MarkerProps -&gt; MisoString)
+-&gt; MarkerProps -&gt; MarkerProps -&gt; Ordering
+forall a b. Ord a =&gt; (b -&gt; a) -&gt; b -&gt; b -&gt; Ordering
+</span><span class="hs-identifier hs-var">comparing</span></span><span> </span><span class="annot"><span class="annottext">MarkerProps -&gt; MisoString
+</span><a href="Miso.Flow.Types.html#markerPropsId"><span class="hs-identifier hs-var">markerPropsId</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set MisoString -&gt; [Edge e] -&gt; [MarkerProps]
+forall {e}. Set MisoString -&gt; [Edge e] -&gt; [MarkerProps]
+</span><a href="#local-6989586621679177425"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Set MisoString
+forall a. Set a
+</span><span class="hs-identifier hs-var">S.empty</span></span><span> </span><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679177419"><span class="hs-identifier hs-var">edges</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-70"></span><span>    </span><span id="local-6989586621679177425"><span class="annot"><span class="annottext">go :: Set MisoString -&gt; [Edge e] -&gt; [MarkerProps]
+</span><a href="#local-6989586621679177425"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span class="annot"><span class="annottext">Set MisoString
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><a href="#local-6989586621679177425"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span id="local-6989586621679177429"><span class="annot"><span class="annottext">Set MisoString
+</span><a href="#local-6989586621679177429"><span class="hs-identifier hs-var">seen</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679177430"><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177430"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621679177431"><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679177431"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-72"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679177432"><span class="annot"><span class="annottext">candidates :: [Maybe EdgeMarkerType]
+</span><a href="#local-6989586621679177432"><span class="hs-identifier hs-var hs-var">candidates</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-73"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Maybe EdgeMarkerType
+-&gt; Maybe EdgeMarkerType -&gt; Maybe EdgeMarkerType
+forall {a}. Maybe a -&gt; Maybe a -&gt; Maybe a
+</span><a href="#local-6989586621679177433"><span class="hs-identifier hs-var">orDefault</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Edge e -&gt; Maybe EdgeMarkerType
+forall e. Edge e -&gt; Maybe EdgeMarkerType
+</span><a href="Miso.Flow.Types.html#edgeMarkerStart"><span class="hs-identifier hs-var">edgeMarkerStart</span></a></span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177430"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe EdgeMarkerType
+</span><a href="#local-6989586621679177422"><span class="hs-identifier hs-var">defaultMarkerStart</span></a></span><span>
+</span><span id="line-74"></span><span>            </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe EdgeMarkerType
+-&gt; Maybe EdgeMarkerType -&gt; Maybe EdgeMarkerType
+forall {a}. Maybe a -&gt; Maybe a -&gt; Maybe a
+</span><a href="#local-6989586621679177433"><span class="hs-identifier hs-var">orDefault</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Edge e -&gt; Maybe EdgeMarkerType
+forall e. Edge e -&gt; Maybe EdgeMarkerType
+</span><a href="Miso.Flow.Types.html#edgeMarkerEnd"><span class="hs-identifier hs-var">edgeMarkerEnd</span></a></span><span> </span><span class="annot"><span class="annottext">Edge e
+</span><a href="#local-6989586621679177430"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe EdgeMarkerType
+</span><a href="#local-6989586621679177423"><span class="hs-identifier hs-var">defaultMarkerEnd</span></a></span><span>
+</span><span id="line-75"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-76"></span><span>          </span><span class="hs-special">(</span><span id="local-6989586621679177438"><span class="annot"><span class="annottext">Set MisoString
+</span><a href="#local-6989586621679177438"><span class="hs-identifier hs-var">seen'</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679177439"><span class="annot"><span class="annottext">[MarkerProps]
+</span><a href="#local-6989586621679177439"><span class="hs-identifier hs-var">props</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Set MisoString, [MarkerProps])
+ -&gt; Maybe EdgeMarkerType -&gt; (Set MisoString, [MarkerProps]))
+-&gt; (Set MisoString, [MarkerProps])
+-&gt; [Maybe EdgeMarkerType]
+-&gt; (Set MisoString, [MarkerProps])
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; [a] -&gt; b
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldl</span></span><span> </span><span class="annot"><span class="annottext">(Set MisoString, [MarkerProps])
+-&gt; Maybe EdgeMarkerType -&gt; (Set MisoString, [MarkerProps])
+</span><a href="#local-6989586621679177441"><span class="hs-identifier hs-var">step</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set MisoString
+</span><a href="#local-6989586621679177429"><span class="hs-identifier hs-var">seen</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Maybe EdgeMarkerType]
+</span><a href="#local-6989586621679177432"><span class="hs-identifier hs-var">candidates</span></a></span><span>
+</span><span id="line-77"></span><span>      </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[MarkerProps] -&gt; [MarkerProps]
+forall a. [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">reverse</span></span><span> </span><span class="annot"><span class="annottext">[MarkerProps]
+</span><a href="#local-6989586621679177439"><span class="hs-identifier hs-var">props</span></a></span><span> </span><span class="annot"><span class="annottext">[MarkerProps] -&gt; [MarkerProps] -&gt; [MarkerProps]
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Set MisoString -&gt; [Edge e] -&gt; [MarkerProps]
+</span><a href="#local-6989586621679177425"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Set MisoString
+</span><a href="#local-6989586621679177438"><span class="hs-identifier hs-var">seen'</span></a></span><span> </span><span class="annot"><span class="annottext">[Edge e]
+</span><a href="#local-6989586621679177431"><span class="hs-identifier hs-var">rest</span></a></span><span>
+</span><span id="line-78"></span><span>    </span><span id="local-6989586621679177433"><span class="annot"><span class="annottext">orDefault :: Maybe a -&gt; Maybe a -&gt; Maybe a
+</span><a href="#local-6989586621679177433"><span class="hs-identifier hs-var hs-var">orDefault</span></a></span></span><span> </span><span id="local-6989586621679177443"><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679177443"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span id="local-6989586621679177444"><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679177444"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679177443"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-79"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679177445"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679177445"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679177445"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-80"></span><span>      </span><span class="annot"><span class="annottext">Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe a
+</span><a href="#local-6989586621679177444"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><span id="line-81"></span><span>    </span><span id="local-6989586621679177441"><span class="annot"><span class="annottext">step :: (Set MisoString, [MarkerProps])
+-&gt; Maybe EdgeMarkerType -&gt; (Set MisoString, [MarkerProps])
+</span><a href="#local-6989586621679177441"><span class="hs-identifier hs-var hs-var">step</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679177448"><span class="annot"><span class="annottext">Set MisoString
+</span><a href="#local-6989586621679177448"><span class="hs-identifier hs-var">seen</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679177449"><span class="annot"><span class="annottext">[MarkerProps]
+</span><a href="#local-6989586621679177449"><span class="hs-identifier hs-var">acc</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-82"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Miso.Flow.Types.html#Marker"><span class="hs-identifier hs-type">Marker</span></a></span><span> </span><span id="local-6989586621679177450"><span class="annot"><span class="annottext">EdgeMarker
+</span><a href="#local-6989586621679177450"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-83"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679177451"><span class="annot"><span class="annottext">markerId :: MisoString
+</span><a href="#local-6989586621679177451"><span class="hs-identifier hs-var hs-var">markerId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe EdgeMarkerType -&gt; Maybe MisoString -&gt; MisoString
+</span><a href="Miso.Flow.Utils.Marker.html#getMarkerId"><span class="hs-identifier hs-var">getMarkerId</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">EdgeMarkerType -&gt; Maybe EdgeMarkerType
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">EdgeMarker -&gt; EdgeMarkerType
+</span><a href="Miso.Flow.Types.html#Marker"><span class="hs-identifier hs-var">Marker</span></a></span><span> </span><span class="annot"><span class="annottext">EdgeMarker
+</span><a href="#local-6989586621679177450"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe MisoString
+</span><a href="#local-6989586621679177420"><span class="hs-identifier hs-var">flowId</span></a></span><span>
+</span><span id="line-84"></span><span>        </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679177451"><span class="hs-identifier hs-var">markerId</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; Set MisoString -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><span class="hs-operator hs-var">`S.member`</span></span><span> </span><span class="annot"><span class="annottext">Set MisoString
+</span><a href="#local-6989586621679177448"><span class="hs-identifier hs-var">seen</span></a></span><span>
+</span><span id="line-85"></span><span>             </span><span class="hs-keyword">then</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set MisoString
+</span><a href="#local-6989586621679177448"><span class="hs-identifier hs-var">seen</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[MarkerProps]
+</span><a href="#local-6989586621679177449"><span class="hs-identifier hs-var">acc</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-86"></span><span>             </span><span class="hs-keyword">else</span><span>
+</span><span id="line-87"></span><span>               </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; Set MisoString -&gt; Set MisoString
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Set a
+</span><span class="hs-identifier hs-var">S.insert</span></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679177451"><span class="hs-identifier hs-var">markerId</span></a></span><span> </span><span class="annot"><span class="annottext">Set MisoString
+</span><a href="#local-6989586621679177448"><span class="hs-identifier hs-var">seen</span></a></span><span>
+</span><span id="line-88"></span><span>               </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; EdgeMarker -&gt; MarkerProps
+</span><a href="Miso.Flow.Types.html#MarkerProps"><span class="hs-identifier hs-var">MarkerProps</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679177451"><span class="hs-identifier hs-var">markerId</span></a></span><span>
+</span><span id="line-89"></span><span>                   </span><span class="annot"><span class="annottext">EdgeMarker
+</span><a href="#local-6989586621679177450"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#markerColor"><span class="hs-identifier hs-var">markerColor</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-90"></span><span>                         </span><span class="hs-keyword">case</span><span> </span><span class="annot"><a href="Miso.Flow.Types.html#markerColor"><span class="hs-identifier hs-var">markerColor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679177450"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-91"></span><span>                           </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679177455"><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679177455"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; Maybe MisoString
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="#local-6989586621679177455"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><span id="line-92"></span><span>                           </span><span class="annot"><span class="annottext">Maybe MisoString
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe MisoString
+</span><a href="#local-6989586621679177421"><span class="hs-identifier hs-var">defaultColor</span></a></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-93"></span><span>                 </span><span class="annot"><span class="annottext">MarkerProps -&gt; [MarkerProps] -&gt; [MarkerProps]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[MarkerProps]
+</span><a href="#local-6989586621679177449"><span class="hs-identifier hs-var">acc</span></a></span><span>
+</span><span id="line-94"></span><span>               </span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>      </span><span class="annot"><span class="annottext">Maybe EdgeMarkerType
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set MisoString
+</span><a href="#local-6989586621679177448"><span class="hs-identifier hs-var">seen</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[MarkerProps]
+</span><a href="#local-6989586621679177449"><span class="hs-identifier hs-var">acc</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-97"></span></pre></body></html>

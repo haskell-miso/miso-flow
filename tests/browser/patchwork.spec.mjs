@@ -173,6 +173,26 @@ const outT2 = await page.evaluate(() =>
   document.querySelector('.miso-flow__node[data-id="out"]').style.transform);
 assert('multi-selection drags as a group', outT2 !== outT1);
 
+// --- 12a. palette: add modules at runtime
+const beforeAdd = await q('.miso-flow__node');
+await page.locator('.pw-palette button', { hasText: 'Add oscillator' }).click();
+await page.waitForTimeout(400);
+await page.locator('.pw-palette button', { hasText: 'Add effect' }).click();
+await page.waitForTimeout(400);
+assert('palette adds modules', await q('.miso-flow__node') === beforeAdd + 2,
+  `${beforeAdd} -> ${await q('.miso-flow__node')}`);
+assert('added module has handles', await q('.miso-flow__node[data-id="effect-1"] .miso-flow__handle') === 2);
+assert('status line live', (await page.locator('.pw-status').textContent()).includes('modules'));
+
+// delete the effect, add another: the fresh id must not collide
+await page.locator('.miso-flow__node[data-id="effect-1"]').click();
+await page.waitForTimeout(300);
+await page.keyboard.press('Delete');
+await page.waitForTimeout(400);
+await page.locator('.pw-palette button', { hasText: 'Add effect' }).click();
+await page.waitForTimeout(400);
+assert('fresh id after delete + re-add', await q('.miso-flow__node[data-id="effect-1"]') === 1);
+
 // --- 12. shift-drag selection box
 await page.mouse.click(720, 820); // clear selection
 await page.waitForTimeout(300);

@@ -20,10 +20,11 @@ import           Miso (App, CSS (Style), defaultEvents, startApp)
 import           Miso.CSS (style_)
 import           Miso.Html (button_, div_, onClick, span_)
 import qualified Miso.Html.Property as P
-import           Miso.String (MisoString)
+import           Miso.String (MisoString, ms)
 import           Miso.Types (Component (styles), View, text)
 -----------------------------------------------------------------------------
 import           Miso.Flow
+import           Miso.Flow.Utils (pointToRendererPoint)
 -----------------------------------------------------------------------------
 main :: IO ()
 main = startApp defaultEvents app
@@ -162,19 +163,38 @@ overlays cfg scene =
           , div_
               [ P.class_ "pw-hint" ]
               [ "Drag modules, patch cables between ports. Sources need "
-              , "a processor before the main out. Shift-drag selects, "
-              , "delete removes, the minimap recenters."
+              , "a processor before the main out. Add modules from the "
+              , "palette, shift-drag to select, delete to remove, click "
+              , "the minimap to recenter."
               ]
           ]
       ]
   , panelView TopRight
-      [ button_
-          [ P.classes_ ("pw-panel" : "pw-toggle" : [ "on" | snapping ])
-          , P.type_ "button"
-          , onClick (FlowOptionsChanged opts { soSnapToGrid = not snapping })
+      [ div_
+          [ P.class_ "pw-stack" ]
+          [ div_
+              [ P.class_ "pw-panel pw-status" ]
+              [ text (ms (length (sceneNodes scene)) <> " modules, "
+                  <> ms (length (sceneEdges scene)) <> " cables, zoom "
+                  <> ms (round (viewportZoom (sceneViewport scene) * 100) :: Int)
+                  <> "%")
+              ]
+          , button_
+              [ P.classes_ ("pw-panel" : "pw-toggle" : [ "on" | snapping ])
+              , P.type_ "button"
+              , onClick (FlowOptionsChanged opts { soSnapToGrid = not snapping })
+              ]
+              [ span_ [ P.class_ "pw-toggle-dot" ] []
+              , text (if snapping then "Snap to grid: on" else "Snap to grid: off")
+              ]
           ]
-          [ span_ [ P.class_ "pw-toggle-dot" ] []
-          , text (if snapping then "Snap to grid: on" else "Snap to grid: off")
+      ]
+  , panelView CenterLeft
+      [ div_
+          [ P.class_ "pw-panel pw-palette" ]
+          [ button_ [ P.type_ "button", onClick (addModule "source") ] [ "Add oscillator" ]
+          , button_ [ P.type_ "button", onClick (addModule "effect") ] [ "Add effect" ]
+          , button_ [ P.type_ "button", onClick (addModule "output") ] [ "Add output" ]
           ]
       ]
   , controlsView BottomLeft
@@ -193,6 +213,38 @@ overlays cfg scene =
   where
     opts = sceneOptions scene
     snapping = soSnapToGrid opts
+    -- spawn a fresh module at the viewport center; the graph is plain
+    -- model data, so adding is just FlowSetNodes with one more node
+    addModule kind =
+      FlowSetNodes (sceneNodes scene <> [ newModule scene kind ])
+-----------------------------------------------------------------------------
+-- | A fresh module of the given kind, placed at the viewport center
+-- (nudged by how many modules exist, so repeated adds cascade).
+newModule :: FlowScene Module () -> MisoString -> Node Module
+newModule scene kind =
+  base { nodeType = Just kind
+       , nodeSourcePosition = Just PositionRight
+       , nodeTargetPosition = Just PositionLeft
+       }
+  where
+    existing = map nodeId (sceneNodes scene)
+    fresh = head
+      [ candidate
+      | i <- [ 1 :: Int .. ]
+      , let candidate = kind <> "-" <> ms i
+      , candidate `notElem` existing
+      ]
+    n = length (sceneNodes scene)
+    Dimensions w h = sceneDimensions scene
+    centre = pointToRendererPoint
+      (xy (w / 2) (h / 2)) (sceneViewport scene) False (SnapGrid 1 1)
+    position = xy
+      (xyX centre + fromIntegral (n `mod` 5) * 28 - 90)
+      (xyY centre + fromIntegral (n `mod` 5) * 22 - 60)
+    base = case kind of
+      "source" -> node fresh position ("Oscillator " <> ms (length existing), "sine wave")
+      "output" -> node fresh position ("Out " <> ms (length existing), "stereo")
+      _ -> node fresh position ("Effect " <> ms (length existing), "empty slot")
 -----------------------------------------------------------------------------
 -- | A small toolbar on each selected cable to unpatch it.
 cableToolbars :: PatchConfig -> FlowScene Module () -> [PatchView]
@@ -213,6 +265,12 @@ cableToolbars cfg scene =
 patchworkStyles :: MisoString
 patchworkStyles = mconcat
   [ "html, body { margin: 0; height: 100%; overflow: hidden; background: #151830; }",
+    ".pw-stack { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }",
+    ".pw-status { font-size: 11.5px; padding: 7px 12px; color: #9aa3d5; }",
+    ".pw-palette { display: flex; flex-direction: column; gap: 2px; padding: 6px; }",
+    ".pw-palette button { border: none; background: transparent; color: var(--mf-panel-color); font-size: 12px; text-align: left; padding: 7px 11px; border-radius: 8px; cursor: pointer; }",
+    ".pw-palette button:hover { background: var(--mf-accent-soft); }",
+    ".pw-palette button:focus-visible { outline: 2px solid var(--mf-accent); }",
   ".pw-module {  background: var(--mf-node-bg);  border: 1px solid var(--mf-node-border);  border-left: 3px solid var(--mf-accent);  border-radius: 10px;  box-shadow: var(--mf-node-shadow);  padding: 10px 16px 11px 13px;  min-width: 150px;  width: 100%;  height: 100%;  box-sizing: border-box;  transition: box-shadow 120ms ease;}",
   ".miso-flow__node-source .pw-module { border-left-color: #ffad4d; }",
   ".miso-flow__node-effect .pw-module,.miso-flow__node-filter .pw-module { border-left-color: #8e9bff; }",

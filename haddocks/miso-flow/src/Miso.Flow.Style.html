@@ -1,0 +1,487 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- |</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- Module      :  Miso.Flow.Style</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- License     :  BSD3-style (see the file LICENSE)</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--</span><span>
+</span><span id="line-8"></span><span class="hs-comment">-- Stylesheets for miso-flow, split the way xyflow splits @base.css@ and</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- @style.css@:</span><span>
+</span><span id="line-10"></span><span class="hs-comment">--</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- * 'flowBaseStyles' &#8212; the structural contract the gesture system</span><span>
+</span><span id="line-12"></span><span class="hs-comment">--   depends on (absolutely positioned pane \/ viewport \/ nodes, the</span><span>
+</span><span id="line-13"></span><span class="hs-comment">--   transformed viewport, pointer-events routing, handle and resizer</span><span>
+</span><span id="line-14"></span><span class="hs-comment">--   geometry). Every app needs these.</span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- * 'flowThemeStyles' &#8212; the default look: color tokens (light, plus a</span><span>
+</span><span id="line-16"></span><span class="hs-comment">--   dark palette behind a @dark@ class on the container), node cards,</span><span>
+</span><span id="line-17"></span><span class="hs-comment">--   cables, panels, controls, minimap, toolbars.</span><span>
+</span><span id="line-18"></span><span class="hs-comment">--</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- 'flowStyles' is both together; 'flowCSS' wraps it for a component's</span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- @styles@ field. To ship your own look, use 'flowBaseCSS' and provide</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- your own rules instead of the theme &#8212; the views reference the</span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- @--mf-*@ custom properties (see 'flowThemeStyles' for the full list),</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- so either define those tokens or restyle the classes directly.</span><span>
+</span><span id="line-24"></span><span class="hs-comment">----------------------------------------------------------------------------</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Miso.Flow.Style.html"><span class="hs-identifier">Miso.Flow.Style</span></a></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Everything</span></span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Miso.Flow.Style.html#flowStyles"><span class="hs-identifier">flowStyles</span></a></span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Style.html#flowCSS"><span class="hs-identifier">flowCSS</span></a></span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Structural contract only</span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Style.html#flowBaseStyles"><span class="hs-identifier">flowBaseStyles</span></a></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Style.html#flowBaseCSS"><span class="hs-identifier">flowBaseCSS</span></a></span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Default theme only</span></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Style.html#flowThemeStyles"><span class="hs-identifier">flowThemeStyles</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Miso.Flow.Style.html#flowThemeCSS"><span class="hs-identifier">flowThemeCSS</span></a></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.html"><span class="hs-identifier">Miso</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.Types.html#CSS"><span class="hs-identifier">CSS</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.Types.html#Style"><span class="hs-identifier">Style</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html"><span class="hs-identifier">Miso.String</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier">MisoString</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-40"></span><span class="annot"><span class="hs-comment">-- | Base + default theme, ready for a component's @styles@ field.</span></span><span>
+</span><span id="line-41"></span><span class="annot"><a href="Miso.Flow.Style.html#flowCSS"><span class="hs-identifier hs-type">flowCSS</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.Types.html#CSS"><span class="hs-identifier hs-type">CSS</span></a></span><span>
+</span><span id="line-42"></span><span id="flowCSS"><span class="annot"><span class="annottext">flowCSS :: CSS
+</span><a href="Miso.Flow.Style.html#flowCSS"><span class="hs-identifier hs-var hs-var">flowCSS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; CSS
+</span><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.Types.html#Style"><span class="hs-identifier hs-var">Style</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#flowStyles"><span class="hs-identifier hs-var">flowStyles</span></a></span><span>
+</span><span id="line-43"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-44"></span><span class="annot"><span class="hs-comment">-- | Structural contract only, for apps shipping their own theme.</span></span><span>
+</span><span id="line-45"></span><span class="annot"><a href="Miso.Flow.Style.html#flowBaseCSS"><span class="hs-identifier hs-type">flowBaseCSS</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.Types.html#CSS"><span class="hs-identifier hs-type">CSS</span></a></span><span>
+</span><span id="line-46"></span><span id="flowBaseCSS"><span class="annot"><span class="annottext">flowBaseCSS :: CSS
+</span><a href="Miso.Flow.Style.html#flowBaseCSS"><span class="hs-identifier hs-var hs-var">flowBaseCSS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; CSS
+</span><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.Types.html#Style"><span class="hs-identifier hs-var">Style</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#flowBaseStyles"><span class="hs-identifier hs-var">flowBaseStyles</span></a></span><span>
+</span><span id="line-47"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-48"></span><span class="annot"><span class="hs-comment">-- | Default theme only.</span></span><span>
+</span><span id="line-49"></span><span class="annot"><a href="Miso.Flow.Style.html#flowThemeCSS"><span class="hs-identifier hs-type">flowThemeCSS</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.Types.html#CSS"><span class="hs-identifier hs-type">CSS</span></a></span><span>
+</span><span id="line-50"></span><span id="flowThemeCSS"><span class="annot"><span class="annottext">flowThemeCSS :: CSS
+</span><a href="Miso.Flow.Style.html#flowThemeCSS"><span class="hs-identifier hs-var hs-var">flowThemeCSS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; CSS
+</span><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.Types.html#Style"><span class="hs-identifier hs-var">Style</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#flowThemeStyles"><span class="hs-identifier hs-var">flowThemeStyles</span></a></span><span>
+</span><span id="line-51"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-52"></span><span class="annot"><span class="hs-comment">-- | The full stylesheet: 'flowBaseStyles' plus 'flowThemeStyles'.</span></span><span>
+</span><span id="line-53"></span><span class="annot"><a href="Miso.Flow.Style.html#flowStyles"><span class="hs-identifier hs-type">flowStyles</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-54"></span><span id="flowStyles"><span class="annot"><span class="annottext">flowStyles :: MisoString
+</span><a href="Miso.Flow.Style.html#flowStyles"><span class="hs-identifier hs-var hs-var">flowStyles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#flowBaseStyles"><span class="hs-identifier hs-var">flowBaseStyles</span></a></span><span> </span><span class="annot"><span class="annottext">MisoString -&gt; MisoString -&gt; MisoString
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#flowThemeStyles"><span class="hs-identifier hs-var">flowThemeStyles</span></a></span><span>
+</span><span id="line-55"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- | Layout and interaction rules the bridge requires; no colors, no</span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- decoration. Do not override positioning, transforms or pointer-events</span><span>
+</span><span id="line-58"></span><span class="hs-comment">-- in these classes.</span><span>
+</span><span id="line-59"></span><span class="annot"><a href="Miso.Flow.Style.html#flowBaseStyles"><span class="hs-identifier hs-type">flowBaseStyles</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-60"></span><span id="flowBaseStyles"><span class="annot"><span class="annottext">flowBaseStyles :: MisoString
+</span><a href="Miso.Flow.Style.html#flowBaseStyles"><span class="hs-identifier hs-var hs-var">flowBaseStyles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\
+\.miso-flow {\
+\  position: relative;\
+\  width: 100%;\
+\  height: 100%;\
+\  overflow: hidden;\
+\  z-index: 0;\
+\}\
+\.miso-flow__renderer,\
+\.miso-flow__pane {\
+\  position: absolute;\
+\  inset: 0;\
+\  width: 100%;\
+\  height: 100%;\
+\}\
+\.miso-flow__pane { cursor: grab; z-index: 1; }\
+\.miso-flow__pane.dragging { cursor: grabbing; }\
+\.miso-flow__viewport {\
+\  position: absolute;\
+\  inset: 0;\
+\  width: 100%;\
+\  height: 100%;\
+\  transform-origin: 0 0;\
+\  pointer-events: none;\
+\  z-index: 2;\
+\  will-change: transform;\
+\}\
+\.miso-flow__selection {\
+\  position: absolute;\
+\  z-index: 4;\
+\  pointer-events: none;\
+\}\
+\.miso-flow__nodes { position: absolute; width: 0; height: 0; }\
+\.miso-flow__node {\
+\  position: absolute;\
+\  pointer-events: all;\
+\  transform-origin: 0 0;\
+\  box-sizing: border-box;\
+\  cursor: default;\
+\  user-select: none;\
+\  -webkit-user-select: none;\
+\  will-change: transform;\
+\}\
+\.miso-flow__node.nopan { cursor: grab; }\
+\.miso-flow__node.dragging { cursor: grabbing; }\
+\.miso-flow__edges {\
+\  position: absolute;\
+\  top: 0;\
+\  left: 0;\
+\  overflow: visible;\
+\  pointer-events: none;\
+\}\
+\.miso-flow__edge { pointer-events: visibleStroke; }\
+\.miso-flow__edge-path { fill: none; }\
+\.miso-flow__edge.animated .miso-flow__edge-path {\
+\  stroke-dasharray: 5;\
+\  animation: miso-flow-dash 0.5s linear infinite;\
+\}\
+\.miso-flow__edge-interaction {\
+\  stroke: transparent;\
+\  fill: none;\
+\  pointer-events: stroke;\
+\  cursor: pointer;\
+\}\
+\.miso-flow__edge-textwrapper { pointer-events: all; }\
+\.miso-flow__edge-anchor {\
+\  fill: transparent;\
+\  stroke: transparent;\
+\  pointer-events: all;\
+\  cursor: move;\
+\}\
+\@keyframes miso-flow-dash { to { stroke-dashoffset: -10; } }\
+\@media (prefers-reduced-motion: reduce) {\
+\  .miso-flow__edge.animated .miso-flow__edge-path { animation: none; }\
+\}\
+\.miso-flow__connectionline {\
+\  position: absolute;\
+\  top: 0;\
+\  left: 0;\
+\  overflow: visible;\
+\  pointer-events: none;\
+\  z-index: 1001;\
+\}\
+\.miso-flow__connection-path { fill: none; }\
+\.miso-flow__handle {\
+\  position: absolute;\
+\  width: 9px;\
+\  height: 9px;\
+\  pointer-events: none;\
+\  min-width: 5px;\
+\  min-height: 5px;\
+\  box-sizing: border-box;\
+\}\
+\.miso-flow__handle.connectable {\
+\  pointer-events: all;\
+\  cursor: crosshair;\
+\}\
+\.miso-flow__handle-top { top: -5px; left: 50%; transform: translate(-50%, 0); }\
+\.miso-flow__handle-bottom { bottom: -5px; left: 50%; transform: translate(-50%, 0); }\
+\.miso-flow__handle-left { left: -5px; top: 50%; transform: translate(0, -50%); }\
+\.miso-flow__handle-right { right: -5px; top: 50%; transform: translate(0, -50%); }\
+\.miso-flow__background {\
+\  position: absolute;\
+\  inset: 0;\
+\  width: 100%;\
+\  height: 100%;\
+\  pointer-events: none;\
+\  z-index: 0;\
+\}\
+\.miso-flow__panel {\
+\  position: absolute;\
+\  z-index: 5;\
+\  margin: 14px;\
+\  pointer-events: all;\
+\}\
+\.miso-flow__panel.top { top: 0; }\
+\.miso-flow__panel.bottom { bottom: 0; }\
+\.miso-flow__panel.left { left: 0; }\
+\.miso-flow__panel.right { right: 0; }\
+\.miso-flow__panel.center-h { left: 50%; transform: translateX(-50%); }\
+\.miso-flow__panel.center-v { top: 50%; transform: translateY(-50%); }\
+\.miso-flow__minimap-mask { fill-rule: evenodd; pointer-events: none; }\
+\.miso-flow__minimap svg { display: block; }\
+\.miso-flow__node-toolbar { position: absolute; }\
+\.miso-flow__edge-toolbar { position: absolute; pointer-events: all; }\
+\.miso-flow__resize-control { position: absolute; pointer-events: all; }\
+\.miso-flow__resize-control.handle { width: 8px; height: 8px; }\
+\.miso-flow__resize-control.handle.top-left { top: -4px; left: -4px; cursor: nwse-resize; }\
+\.miso-flow__resize-control.handle.top-right { top: -4px; right: -4px; cursor: nesw-resize; }\
+\.miso-flow__resize-control.handle.bottom-left { bottom: -4px; left: -4px; cursor: nesw-resize; }\
+\.miso-flow__resize-control.handle.bottom-right { bottom: -4px; right: -4px; cursor: nwse-resize; }\
+\.miso-flow__resize-control.line.top { top: -3px; left: 0; width: 100%; height: 6px; cursor: ns-resize; }\
+\.miso-flow__resize-control.line.bottom { bottom: -3px; left: 0; width: 100%; height: 6px; cursor: ns-resize; }\
+\.miso-flow__resize-control.line.left { left: -3px; top: 0; width: 6px; height: 100%; cursor: ew-resize; }\
+\.miso-flow__resize-control.line.right { right: -3px; top: 0; width: 6px; height: 100%; cursor: ew-resize; }\
+\&quot;</span></span><span>
+</span><span id="line-196"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-197"></span><span class="hs-comment">-- | The default look. Driven by CSS custom properties on @.miso-flow@</span><span>
+</span><span id="line-198"></span><span class="hs-comment">-- (restyle by overriding them): @--mf-bg@, @--mf-dots@, @--mf-node-bg@,</span><span>
+</span><span id="line-199"></span><span class="hs-comment">-- @--mf-node-color@, @--mf-node-border@, @--mf-node-shadow@,</span><span>
+</span><span id="line-200"></span><span class="hs-comment">-- @--mf-node-shadow-selected@, @--mf-accent@, @--mf-accent-soft@,</span><span>
+</span><span id="line-201"></span><span class="hs-comment">-- @--mf-edge@, @--mf-edge-selected@, @--mf-edge-label-bg@,</span><span>
+</span><span id="line-202"></span><span class="hs-comment">-- @--mf-handle@, @--mf-handle-border@, @--mf-connection@,</span><span>
+</span><span id="line-203"></span><span class="hs-comment">-- @--mf-connection-invalid@, @--mf-connection-valid@, @--mf-panel-bg@,</span><span>
+</span><span id="line-204"></span><span class="hs-comment">-- @--mf-panel-border@, @--mf-panel-color@, @--mf-minimap-mask@,</span><span>
+</span><span id="line-205"></span><span class="hs-comment">-- @--mf-minimap-node@, @--mf-selection@, @--mf-font@. Add a @dark@</span><span>
+</span><span id="line-206"></span><span class="hs-comment">-- class on the container for the dark palette.</span><span>
+</span><span id="line-207"></span><span class="annot"><a href="Miso.Flow.Style.html#flowThemeStyles"><span class="hs-identifier hs-type">flowThemeStyles</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-208"></span><span id="flowThemeStyles"><span class="annot"><span class="annottext">flowThemeStyles :: MisoString
+</span><a href="Miso.Flow.Style.html#flowThemeStyles"><span class="hs-identifier hs-var hs-var">flowThemeStyles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[MisoString] -&gt; MisoString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span>
+</span><span id="line-209"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#themeTokens"><span class="hs-identifier hs-var">themeTokens</span></a></span><span>
+</span><span id="line-210"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#themeSurfaces"><span class="hs-identifier hs-var">themeSurfaces</span></a></span><span>
+</span><span id="line-211"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#themeNodes"><span class="hs-identifier hs-var">themeNodes</span></a></span><span>
+</span><span id="line-212"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#themeEdges"><span class="hs-identifier hs-var">themeEdges</span></a></span><span>
+</span><span id="line-213"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#themeHandles"><span class="hs-identifier hs-var">themeHandles</span></a></span><span>
+</span><span id="line-214"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#themePanels"><span class="hs-identifier hs-var">themePanels</span></a></span><span>
+</span><span id="line-215"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#themeControls"><span class="hs-identifier hs-var">themeControls</span></a></span><span>
+</span><span id="line-216"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#themeMinimap"><span class="hs-identifier hs-var">themeMinimap</span></a></span><span>
+</span><span id="line-217"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#themeToolbar"><span class="hs-identifier hs-var">themeToolbar</span></a></span><span>
+</span><span id="line-218"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><a href="Miso.Flow.Style.html#themeResizer"><span class="hs-identifier hs-var">themeResizer</span></a></span><span>
+</span><span id="line-219"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-220"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-221"></span><span class="annot"><a href="Miso.Flow.Style.html#themeTokens"><span class="hs-identifier hs-type">themeTokens</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-222"></span><span id="themeTokens"><span class="annot"><span class="annottext">themeTokens :: MisoString
+</span><a href="Miso.Flow.Style.html#themeTokens"><span class="hs-identifier hs-var hs-var">themeTokens</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\
+\.miso-flow {\
+\  --mf-bg: #f6f7fb;\
+\  --mf-dots: #c3c8d4;\
+\  --mf-node-bg: #ffffff;\
+\  --mf-node-color: #0f172a;\
+\  --mf-node-border: #e2e8f0;\
+\  --mf-node-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.08);\
+\  --mf-node-shadow-selected: 0 0 0 2px var(--mf-accent), 0 12px 32px rgba(79, 70, 229, 0.25);\
+\  --mf-accent: #6366f1;\
+\  --mf-accent-soft: rgba(99, 102, 241, 0.14);\
+\  --mf-edge: #9aa4b6;\
+\  --mf-edge-selected: var(--mf-accent);\
+\  --mf-edge-label-bg: rgba(255, 255, 255, 0.9);\
+\  --mf-handle: #ffffff;\
+\  --mf-handle-border: var(--mf-accent);\
+\  --mf-connection: var(--mf-accent);\
+\  --mf-connection-invalid: #f43f5e;\
+\  --mf-connection-valid: #10b981;\
+\  --mf-panel-bg: rgba(255, 255, 255, 0.86);\
+\  --mf-panel-border: rgba(15, 23, 42, 0.08);\
+\  --mf-panel-color: #334155;\
+\  --mf-minimap-mask: rgba(148, 163, 184, 0.25);\
+\  --mf-minimap-node: #cbd5e1;\
+\  --mf-selection: rgba(99, 102, 241, 0.08);\
+\  --mf-font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Inter', sans-serif;\
+\}\
+\.miso-flow.dark {\
+\  --mf-bg: #151830;\
+\  --mf-dots: #262b4a;\
+\  --mf-node-bg: #1d2244;\
+\  --mf-node-color: #e9ebfa;\
+\  --mf-node-border: #303764;\
+\  --mf-node-shadow: 0 1px 2px rgba(6, 8, 22, 0.5), 0 10px 28px rgba(6, 8, 22, 0.45);\
+\  --mf-node-shadow-selected: 0 0 0 2px var(--mf-accent), 0 12px 32px rgba(255, 173, 77, 0.22);\
+\  --mf-accent: #ffad4d;\
+\  --mf-accent-soft: rgba(255, 173, 77, 0.16);\
+\  --mf-edge: #6e77a8;\
+\  --mf-edge-selected: var(--mf-accent);\
+\  --mf-edge-label-bg: rgba(21, 24, 48, 0.9);\
+\  --mf-handle: #151830;\
+\  --mf-connection: var(--mf-accent);\
+\  --mf-connection-invalid: #fb6e8a;\
+\  --mf-connection-valid: #4ade80;\
+\  --mf-panel-bg: rgba(21, 24, 48, 0.78);\
+\  --mf-panel-border: rgba(154, 163, 213, 0.16);\
+\  --mf-panel-color: #b9bfe3;\
+\  --mf-minimap-mask: rgba(15, 17, 36, 0.62);\
+\  --mf-minimap-node: #3a4170;\
+\  --mf-selection: rgba(255, 173, 77, 0.1);\
+\}&quot;</span></span><span>
+</span><span id="line-273"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-274"></span><span class="annot"><a href="Miso.Flow.Style.html#themeSurfaces"><span class="hs-identifier hs-type">themeSurfaces</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-275"></span><span id="themeSurfaces"><span class="annot"><span class="annottext">themeSurfaces :: MisoString
+</span><a href="Miso.Flow.Style.html#themeSurfaces"><span class="hs-identifier hs-var hs-var">themeSurfaces</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\
+\.miso-flow {\
+\  background-color: var(--mf-bg);\
+\  font-family: var(--mf-font);\
+\}\
+\.miso-flow__selection {\
+\  background: var(--mf-selection);\
+\  border: 1px solid var(--mf-accent);\
+\}&quot;</span></span><span>
+</span><span id="line-284"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-285"></span><span class="annot"><a href="Miso.Flow.Style.html#themeNodes"><span class="hs-identifier hs-type">themeNodes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-286"></span><span id="themeNodes"><span class="annot"><span class="annottext">themeNodes :: MisoString
+</span><a href="Miso.Flow.Style.html#themeNodes"><span class="hs-identifier hs-var hs-var">themeNodes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\
+\.miso-flow__node-default {\
+\  background: var(--mf-node-bg);\
+\  color: var(--mf-node-color);\
+\  border: 1px solid var(--mf-node-border);\
+\  border-radius: 12px;\
+\  box-shadow: var(--mf-node-shadow);\
+\  padding: 10px 16px;\
+\  font-size: 13px;\
+\  min-width: 120px;\
+\  text-align: center;\
+\  transition: box-shadow 120ms ease;\
+\  width: 100%;\
+\  height: 100%;\
+\  box-sizing: border-box;\
+\  display: flex;\
+\  align-items: center;\
+\  justify-content: center;\
+\}\
+\.miso-flow__node.selected &gt; .miso-flow__node-default {\
+\  box-shadow: var(--mf-node-shadow-selected);\
+\}&quot;</span></span><span>
+</span><span id="line-308"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-309"></span><span class="annot"><a href="Miso.Flow.Style.html#themeEdges"><span class="hs-identifier hs-type">themeEdges</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-310"></span><span id="themeEdges"><span class="annot"><span class="annottext">themeEdges :: MisoString
+</span><a href="Miso.Flow.Style.html#themeEdges"><span class="hs-identifier hs-var hs-var">themeEdges</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\
+\.miso-flow__edge-path {\
+\  stroke: var(--mf-edge);\
+\  stroke-width: 1.5;\
+\}\
+\.miso-flow__edge.selected .miso-flow__edge-path {\
+\  stroke: var(--mf-edge-selected);\
+\  stroke-width: 2;\
+\}\
+\.miso-flow__edge.selected .miso-flow__edge-anchor {\
+\  fill: var(--mf-accent-soft);\
+\  stroke: var(--mf-accent);\
+\  stroke-width: 1;\
+\}\
+\.miso-flow__edge-label {\
+\  font-size: 11px;\
+\  fill: var(--mf-panel-color);\
+\}\
+\.miso-flow__edge-labelbg { fill: var(--mf-edge-label-bg); }\
+\.miso-flow__connection-path {\
+\  stroke: var(--mf-connection);\
+\  stroke-width: 1.5;\
+\  stroke-dasharray: 4;\
+\}\
+\.miso-flow__connection-path.invalid { stroke: var(--mf-connection-invalid); }\
+\.miso-flow__connection-path.valid { stroke: var(--mf-connection-valid); }&quot;</span></span><span>
+</span><span id="line-336"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-337"></span><span class="annot"><a href="Miso.Flow.Style.html#themeHandles"><span class="hs-identifier hs-type">themeHandles</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-338"></span><span id="themeHandles"><span class="annot"><span class="annottext">themeHandles :: MisoString
+</span><a href="Miso.Flow.Style.html#themeHandles"><span class="hs-identifier hs-var hs-var">themeHandles</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\
+\.miso-flow__handle {\
+\  background: var(--mf-handle);\
+\  border: 2px solid var(--mf-handle-border);\
+\  border-radius: 100%;\
+\}\
+\.miso-flow__handle.connectable:hover {\
+\  background: var(--mf-handle-border);\
+\}&quot;</span></span><span>
+</span><span id="line-347"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-348"></span><span class="annot"><a href="Miso.Flow.Style.html#themePanels"><span class="hs-identifier hs-type">themePanels</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-349"></span><span id="themePanels"><span class="annot"><span class="annottext">themePanels :: MisoString
+</span><a href="Miso.Flow.Style.html#themePanels"><span class="hs-identifier hs-var hs-var">themePanels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\
+\.miso-flow__attribution {\
+\  font-size: 10px;\
+\  color: var(--mf-panel-color);\
+\  background: var(--mf-panel-bg);\
+\  padding: 2px 6px;\
+\  border-radius: 6px;\
+\  margin: 6px;\
+\  opacity: 0.7;\
+\}\
+\.miso-flow__attribution a { color: inherit; text-decoration: none; }&quot;</span></span><span>
+</span><span id="line-360"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-361"></span><span class="annot"><a href="Miso.Flow.Style.html#themeControls"><span class="hs-identifier hs-type">themeControls</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-362"></span><span id="themeControls"><span class="annot"><span class="annottext">themeControls :: MisoString
+</span><a href="Miso.Flow.Style.html#themeControls"><span class="hs-identifier hs-var hs-var">themeControls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\
+\.miso-flow__controls {\
+\  display: flex;\
+\  flex-direction: column;\
+\  gap: 4px;\
+\  background: var(--mf-panel-bg);\
+\  border: 1px solid var(--mf-panel-border);\
+\  border-radius: 12px;\
+\  padding: 6px;\
+\  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);\
+\  backdrop-filter: blur(8px);\
+\}\
+\.miso-flow__controls-button {\
+\  display: flex;\
+\  align-items: center;\
+\  justify-content: center;\
+\  width: 28px;\
+\  height: 28px;\
+\  border: none;\
+\  border-radius: 8px;\
+\  background: transparent;\
+\  color: var(--mf-panel-color);\
+\  font-size: 15px;\
+\  cursor: pointer;\
+\}\
+\.miso-flow__controls-button:hover { background: var(--mf-accent-soft); }\
+\.miso-flow__controls-button svg { width: 14px; height: 14px; fill: currentColor; }&quot;</span></span><span>
+</span><span id="line-389"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-390"></span><span class="annot"><a href="Miso.Flow.Style.html#themeMinimap"><span class="hs-identifier hs-type">themeMinimap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-391"></span><span id="themeMinimap"><span class="annot"><span class="annottext">themeMinimap :: MisoString
+</span><a href="Miso.Flow.Style.html#themeMinimap"><span class="hs-identifier hs-var hs-var">themeMinimap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\
+\.miso-flow__minimap {\
+\  background: var(--mf-panel-bg);\
+\  border: 1px solid var(--mf-panel-border);\
+\  border-radius: 12px;\
+\  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);\
+\  overflow: hidden;\
+\}\
+\.miso-flow__minimap-mask { fill: var(--mf-minimap-mask); }\
+\.miso-flow__minimap-node { fill: var(--mf-minimap-node); stroke: none; }\
+\.miso-flow__minimap-node.selected { fill: var(--mf-accent); }&quot;</span></span><span>
+</span><span id="line-402"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-403"></span><span class="annot"><a href="Miso.Flow.Style.html#themeToolbar"><span class="hs-identifier hs-type">themeToolbar</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-404"></span><span id="themeToolbar"><span class="annot"><span class="annottext">themeToolbar :: MisoString
+</span><a href="Miso.Flow.Style.html#themeToolbar"><span class="hs-identifier hs-var hs-var">themeToolbar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\
+\.miso-flow__node-toolbar,\
+\.miso-flow__edge-toolbar {\
+\  display: flex;\
+\  gap: 4px;\
+\  background: var(--mf-panel-bg);\
+\  border: 1px solid var(--mf-panel-border);\
+\  border-radius: 10px;\
+\  padding: 4px;\
+\  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);\
+\  backdrop-filter: blur(8px);\
+\}\
+\.miso-flow__node-toolbar button,\
+\.miso-flow__edge-toolbar button {\
+\  border: none;\
+\  background: transparent;\
+\  color: var(--mf-panel-color);\
+\  font-size: 12px;\
+\  padding: 4px 8px;\
+\  border-radius: 6px;\
+\  cursor: pointer;\
+\}\
+\.miso-flow__node-toolbar button:hover,\
+\.miso-flow__edge-toolbar button:hover { background: var(--mf-accent-soft); }&quot;</span></span><span>
+</span><span id="line-428"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-429"></span><span class="annot"><a href="Miso.Flow.Style.html#themeResizer"><span class="hs-identifier hs-type">themeResizer</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///home/dmjio/.local/state/cabal/store/ghc-9.12.2-6f06/miso-1.13.0.0-9d9affbadaf6ee7ec363032ae001239c64644f12dd54a0847ed226013fc747da/share/doc/html/src/Miso.String.html#MisoString"><span class="hs-identifier hs-type">MisoString</span></a></span><span>
+</span><span id="line-430"></span><span id="themeResizer"><span class="annot"><span class="annottext">themeResizer :: MisoString
+</span><a href="Miso.Flow.Style.html#themeResizer"><span class="hs-identifier hs-var hs-var">themeResizer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MisoString
+</span><span class="hs-string">&quot;\
+\.miso-flow__resize-control.handle {\
+\  border: 1.5px solid var(--mf-accent);\
+\  background: var(--mf-handle);\
+\  border-radius: 2px;\
+\}\
+\.miso-flow__resize-control.line { border-color: transparent; }&quot;</span></span><span>
+</span><span id="line-437"></span><span class="hs-comment">-----------------------------------------------------------------------------</span><span>
+</span><span id="line-438"></span></pre></body></html>
