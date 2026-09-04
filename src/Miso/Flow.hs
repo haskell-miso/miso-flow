@@ -79,6 +79,7 @@ import           Miso.Flow.Style
   )
 import           Miso.Flow.Types
 import           Miso.Flow.Utils.Edges (addEdge, reconnectEdge)
+import           Miso.Flow.Utils.General (pointToRendererPoint)
 import           Miso.Flow.Utils.Graph (getElementsToRemove, getNodesInside)
 import           Miso.Flow.Utils.Store
   ( UpdateNodesOptions (..)
@@ -358,10 +359,18 @@ updateFlowWith settings = \case
     syncMinimap
 
   FlowConnectionChanged wire ->
+    -- the gesture system reports @to@ / @pointer@ in pane (screen)
+    -- coordinates while @from@ is already in flow coordinates; convert
+    -- before rendering, as the framework packages do in useConnection
     modify $ \m ->
-      m { fmConnection =
-            wireConnectionState (`M.lookup` fmNodeLookup m) wire
-        }
+      let toFlow p = pointToRendererPoint p (fmViewport m) False (SnapGrid 1 1)
+          wire' = wire
+            { cwTo = toFlow <$> cwTo wire
+            , cwPointer = toFlow <$> cwPointer wire
+            }
+      in m { fmConnection =
+               wireConnectionState (`M.lookup` fmNodeLookup m) wire'
+           }
 
   FlowConnected c -> do
     modify $ \m -> m { fmEdges = addEdge c (fmEdges m) }

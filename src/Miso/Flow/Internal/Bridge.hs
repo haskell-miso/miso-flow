@@ -254,7 +254,10 @@ instance FromJSON WireNodeChange where
 -----------------------------------------------------------------------------
 -- | Connection state as serialized by the bridge: nodes are referred to
 -- by id (resolve them against your 'NodeLookup' via
--- 'wireConnectionState').
+-- 'wireConnectionState'). Mirroring @\@xyflow\/system@, 'cwFrom' is in
+-- flow coordinates while 'cwTo' and 'cwPointer' arrive in pane (screen)
+-- coordinates — convert them with
+-- 'Miso.Flow.Utils.General.pointToRendererPoint' before rendering.
 data ConnectionStateWire = ConnectionStateWire
   { cwInProgress   :: Bool
   , cwIsValid      :: Maybe Bool

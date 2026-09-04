@@ -34,6 +34,30 @@ await page.waitForTimeout(400);
 assert('invalid connection line shown', invalidLine === 1);
 assert('validator refused source->out', await q('.miso-flow__edge') === edges0);
 
+// --- 1b. connection line endpoint tracks the cursor (regression:
+// XYHandle reports `to` in pane coordinates; after fit-view the
+// viewport is translated, so an unconverted endpoint sits ~t away)
+const src1 = center(await page.locator('.miso-flow__handle.source[data-nodeid="lfo"]').boundingBox());
+const empty = { x: src1.x + 170, y: src1.y - 120 }; // no handle nearby
+await page.mouse.move(src1.x, src1.y);
+await page.mouse.down();
+await page.mouse.move(empty.x, empty.y, { steps: 6 });
+await page.waitForTimeout(150);
+const lineEnd = await page.evaluate(() => {
+  const d = document.querySelector('.miso-flow__connection-path').getAttribute('d');
+  const pair = d.trim().split(' ').pop().split(',');
+  const flow = { x: parseFloat(pair[0]), y: parseFloat(pair[1]) };
+  const t = new DOMMatrixReadOnly(
+    getComputedStyle(document.querySelector('.xyflow__viewport')).transform);
+  const box = document.querySelector('.miso-flow').getBoundingClientRect();
+  return { x: flow.x * t.a + t.e + box.left, y: flow.y * t.d + t.f + box.top };
+});
+await page.mouse.up();
+await page.waitForTimeout(300);
+assert('connection line ends under the cursor',
+  Math.abs(lineEnd.x - empty.x) < 3 && Math.abs(lineEnd.y - empty.y) < 3,
+  `cursor ${JSON.stringify(empty)} line ${JSON.stringify(lineEnd)}`);
+
 // --- 2. reconnection: select the filt->delay cable, drag its target anchor to out
 await page.evaluate(() => {
   document.querySelector('.miso-flow__edge-simplebezier .miso-flow__edge-interaction')
