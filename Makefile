@@ -72,7 +72,7 @@ ci-wasm:
 	$(shell wasm32-wasi-ghc --print-libdir)/post-link.mjs --input $(ci_wasm_bin) --output public/ghc_wasm_jsffi.js
 	cp -v $(ci_wasm_bin) public/app.wasm
 	cp -v js/miso-flow.js public/miso-flow.js
-	wasm-opt -all -O2 public/app.wasm -o public/app.wasm
+	wasm-opt -all --disable-compact-imports -O2 public/app.wasm -o public/app.wasm
 	wasm-tools strip -o public/app.wasm public/app.wasm
 
 ci-bridge:
