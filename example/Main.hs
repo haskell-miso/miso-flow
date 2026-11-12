@@ -127,9 +127,9 @@ initialEdges =
 -----------------------------------------------------------------------------
 -- * Modules
 -----------------------------------------------------------------------------
-type PatchView = View () (FlowModel Module ()) (FlowAction Module ())
+type PatchView = View () () (FlowModel Module ()) (FlowAction Module ())
 type PatchConfig =
-  FlowViewConfig () Module () (FlowModel Module ()) (FlowAction Module ())
+  FlowViewConfig () () Module () (FlowModel Module ()) (FlowAction Module ())
 -----------------------------------------------------------------------------
 moduleContent :: PatchConfig -> Node Module -> [PatchView]
 moduleContent cfg n = case nodeType n of

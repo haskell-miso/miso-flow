@@ -684,9 +684,9 @@ sceneFromModel FlowModel {..} = FlowScene
 -----------------------------------------------------------------------------
 -- | Draw a model with a view config (see 'flowViewConfig').
 viewFlow
-  :: FlowViewConfig ctx n e (FlowModel n e) (FlowAction n e)
+  :: FlowViewConfig ctx props n e (FlowModel n e) (FlowAction n e)
   -> FlowModel n e
-  -> View ctx (FlowModel n e) (FlowAction n e)
+  -> View ctx props (FlowModel n e) (FlowAction n e)
 viewFlow cfg = flowView cfg . sceneFromModel
 -----------------------------------------------------------------------------
 -- | A ready-to-mount flow. The view config passed to the customization
@@ -696,10 +696,10 @@ flowComponent
   :: Eq n
   => StoreOptions
   -> FlowSettings
-  -> (n -> View ctx (FlowModel n e) (FlowAction n e))
+  -> (n -> View ctx props (FlowModel n e) (FlowAction n e))
   -- ^ node label
-  -> (FlowViewConfig ctx n e (FlowModel n e) (FlowAction n e)
-      -> FlowViewConfig ctx n e (FlowModel n e) (FlowAction n e))
+  -> (FlowViewConfig ctx props n e (FlowModel n e) (FlowAction n e)
+      -> FlowViewConfig ctx props n e (FlowModel n e) (FlowAction n e))
   -- ^ view customization ('id' for the defaults)
   -> [Node n]
   -> [Edge e]
@@ -712,5 +712,5 @@ flowComponent options settings label customize nodes edges =
       { fvcFlowId = soFlowId options
       , fvcConnectionMode = soConnectionMode options
       }
-    view _ctx _props = viewFlow cfg
+    view = viewFlow cfg
 -----------------------------------------------------------------------------
