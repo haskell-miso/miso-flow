@@ -139,12 +139,12 @@ data FlowHooks action = FlowHooks
 -----------------------------------------------------------------------------
 -- | Content rendered /inside/ the node wrapper element (the wrapper
 -- itself — positioning, classes, lifecycle — is owned by 'flowView').
-type NodeContentRenderer ctx n e model action
-  = FlowViewConfig ctx n e model action
+type NodeContentRenderer ctx props n e model action
+  = FlowViewConfig ctx props n e model action
   -> Node n
-  -> [View ctx model action]
+  -> [View ctx props model action]
 -----------------------------------------------------------------------------
-data FlowViewConfig ctx n e model action = FlowViewConfig
+data FlowViewConfig ctx props n e model action = FlowViewConfig
   { fvcFlowId :: MisoString
     -- ^ must match 'Miso.Flow.Internal.Bridge.soFlowId'
   , fvcDark :: Bool
@@ -155,12 +155,12 @@ data FlowViewConfig ctx n e model action = FlowViewConfig
     -- ^ path style of the in-progress connection line
   , fvcShowBackground :: Bool
     -- ^ render the dot-grid background
-  , fvcNodeContent :: NodeContentRenderer ctx n e model action
+  , fvcNodeContent :: NodeContentRenderer ctx props n e model action
   , fvcAttrs :: [Attribute model action]
     -- ^ extra attributes for the container (id, inline size, …)
-  , fvcChildren :: FlowScene n e -> [View ctx model action]
+  , fvcChildren :: FlowScene n e -> [View ctx props model action]
     -- ^ overlays for the current scene: panels, controls, minimap, …
-  , fvcViewportChildren :: FlowScene n e -> [View ctx model action]
+  , fvcViewportChildren :: FlowScene n e -> [View ctx props model action]
     -- ^ overlays rendered /inside/ the transformed viewport (flow
     -- coordinates): edge toolbars, custom labels, …
   , fvcEdgesReconnectable :: Bool
@@ -172,9 +172,9 @@ data FlowViewConfig ctx n e model action = FlowViewConfig
 -- through the given label view.
 flowViewConfig
   :: FlowHooks action
-  -> (n -> View ctx model action)
+  -> (n -> View ctx props model action)
   -- ^ node label
-  -> FlowViewConfig ctx n e model action
+  -> FlowViewConfig ctx props n e model action
 flowViewConfig hooks label = FlowViewConfig
   { fvcFlowId = "1"
   , fvcDark = False
@@ -209,9 +209,9 @@ data FlowScene n e = FlowScene
 -----------------------------------------------------------------------------
 -- | The full flow container.
 flowView
-  :: FlowViewConfig ctx n e model action
+  :: FlowViewConfig ctx props n e model action
   -> FlowScene n e
-  -> View ctx model action
+  -> View ctx props model action
 flowView cfg@FlowViewConfig {..} scene@FlowScene {..} =
   H.div_
     ( P.classes_ ("miso-flow" : [ "dark" | fvcDark ])
@@ -249,10 +249,10 @@ viewportTransform Viewport {..} = mconcat
 -- * Nodes
 -----------------------------------------------------------------------------
 nodeView
-  :: FlowViewConfig ctx n e model action
+  :: FlowViewConfig ctx props n e model action
   -> FlowScene n e
   -> Node n
-  -> View ctx model action
+  -> View ctx props model action
 nodeView cfg@FlowViewConfig {..} FlowScene {..} n
   | nodeHidden n =
       H.div_
@@ -313,9 +313,9 @@ justWhen b a = if b then Just a else Nothing
 -----------------------------------------------------------------------------
 -- | Default node content: a target handle, the label, a source handle.
 defaultNodeContent
-  :: (Node n -> View ctx model action)
+  :: (Node n -> View ctx props model action)
   -- ^ label
-  -> NodeContentRenderer ctx n e model action
+  -> NodeContentRenderer ctx props n e model action
 defaultNodeContent label cfg n =
   [ handleView cfg n TargetHandle (fromMaybe PositionTop (nodeTargetPosition n)) Nothing
   , H.div_ [ P.class_ "miso-flow__node-default" ] [ label n ]
@@ -326,13 +326,13 @@ defaultNodeContent label cfg n =
 -- reads ('data-id' mirrors the TS template including its @null@ for a
 -- missing handle id).
 handleView
-  :: FlowViewConfig ctx n e model action
+  :: FlowViewConfig ctx props n e model action
   -> Node n
   -> HandleType
   -> Position
   -> Maybe MisoString
   -- ^ handle id (for multi-handle nodes)
-  -> View ctx model action
+  -> View ctx props model action
 handleView FlowViewConfig {..} n handleType position handleId =
   H.div_
     [ P.classes_ $
@@ -360,9 +360,9 @@ handleView FlowViewConfig {..} n handleType position handleId =
 -- * Edges
 -----------------------------------------------------------------------------
 edgesView
-  :: FlowViewConfig ctx n e model action
+  :: FlowViewConfig ctx props n e model action
   -> FlowScene n e
-  -> View ctx model action
+  -> View ctx props model action
 edgesView cfg FlowScene {..} =
   S.svg_
     [ P.class_ "miso-flow__edges" ]
@@ -378,10 +378,10 @@ edgesView cfg FlowScene {..} =
         && not (hiddenNode (edgeTarget e))
 -----------------------------------------------------------------------------
 edgeView
-  :: FlowViewConfig ctx n e model action
+  :: FlowViewConfig ctx props n e model action
   -> NodeLookup n
   -> Edge e
-  -> View ctx model action
+  -> View ctx props model action
 edgeView FlowViewConfig {..} nodeLookup e =
   S.g_
     [ key_ (edgeId e)
@@ -478,9 +478,9 @@ nodeToolbarView
   :: ToolbarConfig
   -> FlowScene n e
   -> NodeId
-  -> [View ctx model action]
+  -> [View ctx props model action]
   -- ^ toolbar content
-  -> [View ctx model action]
+  -> [View ctx props model action]
 nodeToolbarView ToolbarConfig {..} FlowScene {..} nid content =
   case M.lookup nid sceneNodeLookup of
     Just internal
@@ -512,12 +512,12 @@ nodeToolbarView ToolbarConfig {..} FlowScene {..} nid content =
 --   ]
 -- @
 edgeToolbarView
-  :: FlowViewConfig ctx n e model action
+  :: FlowViewConfig ctx props n e model action
   -> FlowScene n e
   -> EdgeId
-  -> [View ctx model action]
+  -> [View ctx props model action]
   -- ^ toolbar content
-  -> [View ctx model action]
+  -> [View ctx props model action]
 edgeToolbarView FlowViewConfig {..} FlowScene {..} eid content =
   case [ e | e <- sceneEdges, edgeId e == eid ] of
     (e : _)
@@ -582,7 +582,7 @@ pathByType ty EdgePosition {..} = case ty of
           , smoothBorderRadius = radius
           }
 -----------------------------------------------------------------------------
-markerDefs :: MisoString -> [Edge e] -> View ctx model action
+markerDefs :: MisoString -> [Edge e] -> View ctx props model action
 markerDefs flowId edges =
   S.defs_ [] (map markerDef (createMarkerIds edges (Just flowId) Nothing Nothing Nothing))
   where
@@ -627,7 +627,7 @@ multiModifierDecoder = Decoder
         <*> o .: "ctrlKey"
   }
 -----------------------------------------------------------------------------
-selectionRectView :: Maybe Rect -> [View ctx model action]
+selectionRectView :: Maybe Rect -> [View ctx props model action]
 selectionRectView Nothing = []
 selectionRectView (Just (Rect x y w h)) =
   [ H.div_
@@ -645,9 +645,9 @@ selectionRectView (Just (Rect x y w h)) =
 -- * Connection line
 -----------------------------------------------------------------------------
 connectionLineView
-  :: FlowViewConfig ctx n e model action
+  :: FlowViewConfig ctx props n e model action
   -> ConnectionState n
-  -> [View ctx model action]
+  -> [View ctx props model action]
 connectionLineView _ NoConnection = []
 connectionLineView FlowViewConfig {..} (InProgress cip) =
   [ S.svg_
@@ -685,7 +685,7 @@ connectionPathFor lineType ConnectionInProgress {..} =
 -----------------------------------------------------------------------------
 -- * Background
 -----------------------------------------------------------------------------
-backgroundView :: MisoString -> Viewport -> View ctx model action
+backgroundView :: MisoString -> Viewport -> View ctx props model action
 backgroundView flowId Viewport {..} =
   S.svg_
     [ P.class_ "miso-flow__background" ]
@@ -722,8 +722,8 @@ backgroundView flowId Viewport {..} =
 -- "Miso.Flow.Style").
 panelView
   :: PanelPosition
-  -> [View ctx model action]
-  -> View ctx model action
+  -> [View ctx props model action]
+  -> View ctx props model action
 panelView position =
   H.div_ [ P.classes_ ("miso-flow__panel" : positionClasses position) ]
   where
@@ -741,7 +741,7 @@ panelView position =
 controlsView
   :: PanelPosition
   -> [(MisoString, action)]
-  -> View ctx model action
+  -> View ctx props model action
 controlsView position buttons =
   panelView position
     [ H.div_
@@ -814,9 +814,9 @@ minimapViewScaleFor mm dims viewport nodeLookup =
 -- | A pannable\/zoomable overview map. Include it in 'fvcChildren'.
 minimapView
   :: MinimapConfig
-  -> FlowViewConfig ctx n e model action
+  -> FlowViewConfig ctx props n e model action
   -> FlowScene n e
-  -> View ctx model action
+  -> View ctx props model action
 minimapView mm@MinimapConfig {..} FlowViewConfig {..} FlowScene {..} =
   panelView mmPosition
     [ H.div_
@@ -904,9 +904,9 @@ defaultResizerConfig = ResizerConfig
 -- @
 nodeResizerView
   :: ResizerConfig
-  -> FlowViewConfig ctx n e model action
+  -> FlowViewConfig ctx props n e model action
   -> Node n
-  -> [View ctx model action]
+  -> [View ctx props model action]
 nodeResizerView ResizerConfig {..} FlowViewConfig {..} n =
   map (control "line") (map ControlLine [ ControlLineTop, ControlLineBottom, ControlLineLeft, ControlLineRight ])
     <> map (control "handle") xyResizerHandlePositions
